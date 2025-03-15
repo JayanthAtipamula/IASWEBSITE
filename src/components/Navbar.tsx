@@ -1,14 +1,18 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, LogIn } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  const { user } = useAuth();
 
   const menuItems = [
     { title: 'Home', href: '/' },
     { title: 'Resources', href: '/#resources' },
+    { title: 'Blog', href: '/blog' },
     { title: 'Testimonials', href: '/#testimonials' },
     { title: 'FAQ', href: '/#faq' },
     { title: 'Contact', href: '/#contact' },
@@ -32,14 +36,26 @@ const Navbar = () => {
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {menuItems.map((item) => (
-              <Link key={item.title} to={item.href} className="nav-link">
+              <Link
+                key={item.title}
+                to={item.href}
+                className={`nav-link ${
+                  location.pathname === item.href ? 'text-blue-600' : ''
+                }`}
+              >
                 {item.title}
               </Link>
             ))}
-            <button className="flex items-center btn-primary">
-              <LogIn className="w-4 h-4 mr-2" />
-              Login
-            </button>
+            {user ? (
+              <Link to="/admin" className="flex items-center btn-primary">
+                Admin Panel
+              </Link>
+            ) : (
+              <Link to="/admin/login" className="flex items-center btn-primary">
+                <LogIn className="w-4 h-4 mr-2" />
+                Login
+              </Link>
+            )}
           </div>
 
           {/* Mobile Menu Button */}
@@ -64,19 +80,32 @@ const Navbar = () => {
                   <Link
                     key={item.title}
                     to={item.href}
-                    className="block px-3 py-2 rounded-md text-base nav-link"
+                    className={`block px-3 py-2 rounded-md text-base nav-link ${
+                      location.pathname === item.href ? 'text-blue-600' : ''
+                    }`}
                     onClick={() => setIsOpen(false)}
                   >
                     {item.title}
                   </Link>
                 ))}
-                <button 
-                  className="flex items-center btn-primary w-full justify-center mt-4"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <LogIn className="w-4 h-4 mr-2" />
-                  Login
-                </button>
+                {user ? (
+                  <Link
+                    to="/admin"
+                    className="flex items-center btn-primary w-full justify-center mt-4"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Admin Panel
+                  </Link>
+                ) : (
+                  <Link
+                    to="/admin/login"
+                    className="flex items-center btn-primary w-full justify-center mt-4"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Login
+                  </Link>
+                )}
               </div>
             </motion.div>
           )}
