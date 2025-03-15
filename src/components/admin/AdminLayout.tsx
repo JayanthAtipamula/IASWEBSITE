@@ -7,7 +7,9 @@ import {
   Tag, 
   LogOut,
   Menu,
-  X
+  X,
+  BookOpen,
+  BarChart
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -19,6 +21,8 @@ const AdminLayout = () => {
     { title: 'Dashboard', path: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
     { title: 'Blog Posts', path: '/admin/posts', icon: <FileText className="w-5 h-5" /> },
     { title: 'Categories', path: '/admin/categories', icon: <Tag className="w-5 h-5" /> },
+    { title: 'Quizzes', path: '/admin/quizzes', icon: <BookOpen className="w-5 h-5" /> },
+    { title: 'Quiz Attempts', path: '/admin/quiz-attempts', icon: <BarChart className="w-5 h-5" /> },
   ];
 
   const handleSignOut = async () => {
