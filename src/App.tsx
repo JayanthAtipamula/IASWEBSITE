@@ -1,26 +1,66 @@
-import React from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Hero from './components/Hero';
 import Resources from './components/Resources';
+import About from './components/About';
 import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
 
-function App() {
+// Blog Pages
+import BlogIndex from './pages/blog/BlogIndex';
+import BlogPost from './pages/blog/BlogPost';
+
+// Admin Pages
+import { AuthProvider } from './contexts/AuthContext';
+import ProtectedRoute from './components/ProtectedRoute';
+import Login from './pages/admin/Login';
+import AdminLayout from './components/admin/AdminLayout';
+import Dashboard from './pages/admin/Dashboard';
+import BlogPosts from './pages/admin/BlogPosts';
+import BlogPostEditor from './pages/admin/BlogPostEditor';
+import Categories from './pages/admin/Categories';
+
+const App = () => {
   return (
-    <div className="relative">
-      <Navbar />
-      <main>
-        <Hero />
-        <Resources />
-        <Testimonials />
-        <FAQ />
-        <Contact />
-      </main>
-      <Footer />
-    </div>
+    <AuthProvider>
+      <div className="min-h-screen bg-gray-50">
+        <Navbar />
+        <Routes>
+          {/* Public Routes */}
+          <Route path="/" element={
+            <div>
+              <Hero />
+              <Resources />
+              <About />
+              <Testimonials />
+              <FAQ />
+              <Contact />
+            </div>
+          } />
+          
+          {/* Blog Routes */}
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
+          
+          {/* Admin Routes */}
+          <Route path="/admin/login" element={<Login />} />
+          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
+            <Route index element={<Dashboard />} />
+            <Route path="posts" element={<BlogPosts />} />
+            <Route path="posts/new" element={<BlogPostEditor />} />
+            <Route path="posts/edit/:id" element={<BlogPostEditor />} />
+            <Route path="categories" element={<Categories />} />
+          </Route>
+          
+          {/* Catch-all route */}
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+        <Footer />
+      </div>
+    </AuthProvider>
   );
-}
+};
 
 export default App;
