@@ -20,16 +20,16 @@ const Footer = () => {
               Empowering UPSC aspirants with comprehensive study materials and expert guidance.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-200 hover:text-white transition-colors">
+              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-200 hover:text-white transition-colors">
+              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-200 hover:text-white transition-colors">
+              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="LinkedIn">
                 <Linkedin className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-200 hover:text-white transition-colors">
+              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram className="w-5 h-5" />
               </a>
             </div>
