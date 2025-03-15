@@ -46,38 +46,51 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
   const answeredCount = answers.filter(a => a !== null).length;
   
   return (
-    <div className="bg-white shadow-md rounded-lg p-6 h-full">
-      <div className="flex justify-between items-center mb-6">
-        <button
-          onClick={handlePrevious}
-          disabled={currentQuestion === 0}
-          className={`px-4 py-2 rounded-md font-medium flex items-center ${
-            currentQuestion === 0
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200 transition-colors'
-          }`}
-        >
-          <ArrowLeft className="h-4 w-4 mr-1" />
-          Previous
-        </button>
-        
-        <button
-          onClick={handleNext}
-          disabled={currentQuestion === totalQuestions - 1}
-          className={`px-4 py-2 rounded-md font-medium flex items-center ${
-            currentQuestion === totalQuestions - 1
-              ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-              : 'bg-indigo-100 text-indigo-800 hover:bg-indigo-200 transition-colors'
-          }`}
-        >
-          Next
-          <ArrowRight className="h-4 w-4 ml-1" />
-        </button>
+    <div className="bg-white shadow-sm rounded-lg p-6">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Question Navigation</h3>
+      
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-2">
+          <button
+            onClick={handlePrevious}
+            disabled={currentQuestion === 0}
+            className={`px-3 py-1 rounded-md font-medium flex items-center text-sm ${
+              currentQuestion === 0
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors'
+            }`}
+          >
+            <ArrowLeft className="h-4 w-4 mr-1" />
+            Previous
+          </button>
+          
+          <button
+            onClick={handleNext}
+            disabled={currentQuestion === totalQuestions - 1}
+            className={`px-3 py-1 rounded-md font-medium flex items-center text-sm ${
+              currentQuestion === totalQuestions - 1
+                ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                : 'bg-indigo-50 text-indigo-700 hover:bg-indigo-100 transition-colors'
+            }`}
+          >
+            Next
+            <ArrowRight className="h-4 w-4 ml-1" />
+          </button>
+        </div>
       </div>
       
       <div className="mb-2">
         <p className="text-sm text-gray-500 font-medium">
-          Questions ({answeredCount}/{totalQuestions} answered)
+          Quiz Progress
+        </p>
+        <div className="w-full bg-gray-200 rounded-full h-1.5 mt-1 mb-3">
+          <div 
+            className="h-1.5 rounded-full bg-green-500" 
+            style={{ width: `${(answeredCount / totalQuestions) * 100}%` }}
+          ></div>
+        </div>
+        <p className="text-xs text-gray-500">
+          {answeredCount} of {totalQuestions} questions answered
         </p>
       </div>
       
@@ -86,27 +99,22 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
           <button
             key={index}
             onClick={() => onNavigate(index)}
-            className={`h-10 w-full rounded-md flex items-center justify-center font-medium transition-colors relative ${
+            className={`h-9 w-full rounded-md flex items-center justify-center font-medium text-sm transition-colors ${
               index === currentQuestion
-                ? 'bg-indigo-600 text-white shadow-md transform scale-110 font-bold border-2 border-indigo-700'
+                ? 'bg-indigo-600 text-white'
                 : answers[index] !== null
-                ? 'bg-green-100 text-green-800 hover:bg-green-200 border border-green-300'
+                ? 'bg-green-100 text-green-800 hover:bg-green-200'
                 : 'bg-gray-100 text-gray-800 hover:bg-gray-200'
             }`}
           >
             {index + 1}
-            {answers[index] !== null && index !== currentQuestion && (
-              <span className="absolute -top-1 -right-1 bg-green-500 rounded-full p-0.5">
-                <Check className="h-3 w-3 text-white" />
-              </span>
-            )}
           </button>
         ))}
       </div>
       
       <button
         onClick={onSubmit}
-        className="w-full py-3 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors shadow-md"
+        className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors"
       >
         Submit Quiz
       </button>

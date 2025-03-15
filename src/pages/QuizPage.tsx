@@ -4,6 +4,7 @@ import QuizQuestion from '../components/quiz/QuizQuestion';
 import QuizNavigation from '../components/quiz/QuizNavigation';
 import QuizTimer from '../components/quiz/QuizTimer';
 import QuizResult from '../components/quiz/QuizResult';
+import QuizDetails from '../components/quiz/QuizDetails';
 import { getQuizById, Quiz, QuizQuestion as QuizQuestionType } from '../services/quizService';
 import { useAuth } from '../contexts/AuthContext';
 import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
@@ -98,7 +99,7 @@ const QuizPage: React.FC = () => {
     if (!user || !quizId || !quiz || quizCompleted) return;
     
     try {
-      const progressData: QuizProgress = {
+      const progressData = {
         userId: user.uid,
         quizId,
         currentQuestionIndex,
@@ -108,18 +109,10 @@ const QuizPage: React.FC = () => {
       };
       
       if (progressId) {
-        // Update existing progress document
-        const progressRef = doc(db, 'quizProgress', progressId);
-        await updateDoc(progressRef, {
-          userId: user.uid,
-          quizId,
-          currentQuestionIndex,
-          userAnswers,
-          startTime: startTime || Date.now(),
-          lastUpdated: new Date()
-        });
+        // Update existing progress
+        await updateDoc(doc(db, 'quizProgress', progressId), progressData);
       } else {
-        // Create new progress document
+        // Create new progress
         const docRef = await addDoc(collection(db, 'quizProgress'), progressData);
         setProgressId(docRef.id);
       }
@@ -128,79 +121,104 @@ const QuizPage: React.FC = () => {
     }
   };
 
-  // Save progress whenever relevant state changes
+  // Save progress when component unmounts or when relevant state changes
   useEffect(() => {
     if (quizStarted && !quizCompleted) {
       saveProgress();
     }
-  }, [currentQuestionIndex, userAnswers, quizStarted]);
+    
+    // Save progress when component unmounts
+    return () => {
+      if (quizStarted && !quizCompleted) {
+        saveProgress();
+      }
+    };
+  }, [currentQuestionIndex, userAnswers, quizStarted, quizCompleted]);
 
+  // Handle starting the quiz
   const handleStartQuiz = () => {
     setQuizStarted(true);
     setStartTime(Date.now());
-    saveProgress();
   };
 
+  // Handle selecting an answer
   const handleSelectAnswer = (answerIndex: number) => {
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = answerIndex;
     setUserAnswers(newAnswers);
   };
 
+  // Handle navigating to a specific question
   const handleNavigate = (questionIndex: number) => {
     setCurrentQuestionIndex(questionIndex);
   };
 
+  // Handle moving to the next question
   const handleNextQuestion = () => {
-    if (quiz && currentQuestionIndex < quiz.questions.length - 1) {
+    if (currentQuestionIndex < (quiz?.questions?.length || 0) - 1) {
       setCurrentQuestionIndex(currentQuestionIndex + 1);
     }
   };
 
+  // Handle moving to the previous question
   const handlePrevQuestion = () => {
     if (currentQuestionIndex > 0) {
       setCurrentQuestionIndex(currentQuestionIndex - 1);
     }
   };
 
-  const handleSubmitQuiz = (timeSpent: number) => {
-    setQuizCompleted(true);
-    setTimeTaken(timeSpent);
+  // Handle submitting the quiz
+  const handleSubmitQuiz = async (timeSpent?: number) => {
+    if (timeSpent) {
+      setTimeTaken(timeSpent);
+    } else {
+      // Calculate time taken if not provided
+      const endTime = Date.now();
+      const timeElapsed = Math.floor((endTime - (startTime || endTime)) / 1000);
+      setTimeTaken(timeElapsed);
+    }
     
-    // Delete progress document when quiz is completed
+    setQuizCompleted(true);
+    
+    // Delete progress from database since quiz is completed
     if (progressId) {
       try {
-        deleteDoc(doc(db, 'quizProgress', progressId));
+        await deleteDoc(doc(db, 'quizProgress', progressId));
       } catch (err) {
         console.error('Error deleting quiz progress:', err);
       }
     }
   };
 
+  // Handle when time is up
   const handleTimeUp = () => {
-    // Auto-submit the quiz when time is up
-    handleSubmitQuiz(quiz?.timeInMinutes ? quiz.timeInMinutes * 60 : 0);
+    handleSubmitQuiz();
   };
 
   if (loading) {
     return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-indigo-500"></div>
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-indigo-500"></div>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded">
-          <p>{error}</p>
-          <button 
-            onClick={() => navigate('/quizzes')}
-            className="mt-2 inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-          >
-            Back to Quizzes
-          </button>
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div className="max-w-md mx-auto">
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg" role="alert">
+            <p className="font-bold">Error</p>
+            <p>{error}</p>
+          </div>
+          <div className="mt-4 text-center">
+            <button
+              onClick={() => navigate('/quizzes')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            >
+              Back to Quizzes
+            </button>
+          </div>
         </div>
       </div>
     );
@@ -212,104 +230,61 @@ const QuizPage: React.FC = () => {
 
   if (quizCompleted) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <QuizResult 
-          questions={quiz.questions}
-          userAnswers={userAnswers}
-          timeTaken={timeTaken}
-          quizTitle={quiz.title}
-          quizId={quiz.id}
-        />
+      <QuizResult
+        quiz={quiz}
+        userAnswers={userAnswers}
+        timeTaken={timeTaken}
+      />
+    );
+  }
+
+  if (!quizStarted) {
+    return (
+      <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <QuizDetails quiz={quiz} onStartQuiz={handleStartQuiz} />
       </div>
     );
   }
 
+  const currentQuestion = quiz.questions[currentQuestionIndex];
+
   return (
-    <div className="container mx-auto px-4 py-8">
-      {!quizStarted ? (
-        <div className="bg-white shadow-lg rounded-lg overflow-hidden max-w-2xl mx-auto">
-          <div className="bg-indigo-600 px-6 py-4">
-            <h1 className="text-2xl font-bold text-white">{quiz.title}</h1>
-          </div>
-          <div className="p-6">
-            <p className="text-gray-700 mb-6">{quiz.description}</p>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Time Limit</p>
-                <p className="text-lg font-medium">{quiz.timeInMinutes} minutes</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Questions</p>
-                <p className="text-lg font-medium">{quiz.questions?.length || 0} questions</p>
-              </div>
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">Difficulty</p>
-                <p className="text-lg font-medium capitalize">{quiz.difficulty}</p>
-              </div>
-            </div>
-            <button
-              onClick={handleStartQuiz}
-              className="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg shadow transition-colors"
-            >
-              Start Quiz
-            </button>
-          </div>
+    <div className="min-h-screen bg-gray-50 py-8 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">{quiz.title}</h1>
         </div>
-      ) : (
-        <div className="max-w-6xl mx-auto">
-          {/* Quiz Progress at the top */}
-          <div className="mb-6">
-            <div className="w-full bg-gray-200 rounded-full h-3">
-              <div 
-                className="bg-indigo-600 h-3 rounded-full transition-all duration-300 ease-in-out" 
-                style={{ width: `${((currentQuestionIndex + 1) / quiz.questions.length) * 100}%` }}
-              ></div>
-            </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+          <div className="lg:col-span-3">
+            <QuizQuestion
+              question={currentQuestion}
+              selectedAnswer={userAnswers[currentQuestionIndex]}
+              onSelectAnswer={handleSelectAnswer}
+              questionNumber={currentQuestionIndex + 1}
+              totalQuestions={quiz.questions.length}
+            />
           </div>
           
-          {/* Main content with question and timer side by side */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Question area - takes 2/3 of the space */}
-            <div className="md:col-span-2">
-              <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
-                <div className="bg-indigo-600 px-6 py-4">
-                  <h2 className="text-xl font-bold text-white">Question {currentQuestionIndex + 1} of {quiz.questions.length}</h2>
-                </div>
-                <div className="p-6">
-                  <QuizQuestion 
-                    question={quiz.questions[currentQuestionIndex]}
-                    selectedAnswer={userAnswers[currentQuestionIndex]}
-                    onSelectAnswer={handleSelectAnswer}
-                    questionNumber={currentQuestionIndex + 1}
-                    totalQuestions={quiz.questions.length}
-                  />
-                </div>
-              </div>
-              
-              <QuizNavigation 
-                currentQuestion={currentQuestionIndex}
-                totalQuestions={quiz.questions.length}
-                answeredQuestions={userAnswers}
-                onNavigate={handleNavigate}
-                onNext={handleNextQuestion}
-                onPrevious={handlePrevQuestion}
-                onSubmit={() => handleSubmitQuiz(quiz.timeInMinutes * 60 - (quiz.timeInMinutes * 60))}
-                userAnswers={userAnswers}
-              />
-            </div>
+          <div className="lg:col-span-1 space-y-6">
+            <QuizTimer
+              startTime={startTime || Date.now()}
+              totalSeconds={quiz.timeInMinutes * 60}
+              onTimeUp={handleTimeUp}
+            />
             
-            {/* Timer area - takes 1/3 of the space */}
-            <div className="md:col-span-1">
-              <QuizTimer 
-                startTime={startTime || Date.now()}
-                totalSeconds={quiz.timeInMinutes * 60}
-                onTimeUp={handleTimeUp}
-                onSubmit={handleSubmitQuiz}
-              />
-            </div>
+            <QuizNavigation
+              currentQuestion={currentQuestionIndex}
+              totalQuestions={quiz.questions.length}
+              answeredQuestions={userAnswers}
+              onNavigate={handleNavigate}
+              onSubmit={() => handleSubmitQuiz()}
+              onPrevious={handlePrevQuestion}
+              onNext={handleNextQuestion}
+            />
           </div>
         </div>
-      )}
+      </div>
     </div>
   );
 };

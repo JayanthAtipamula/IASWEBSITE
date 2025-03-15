@@ -73,16 +73,16 @@ const QuizTimer: React.FC<QuizTimerProps> = ({
   };
   
   return (
-    <div className="bg-white shadow-md rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Time Remaining</h3>
+    <div className="bg-white shadow-sm rounded-lg p-6">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Time Remaining</h3>
       
-      <div className="flex items-center justify-center mb-4">
-        <div className="text-3xl font-bold">{formatTime(timeLeft)}</div>
+      <div className="text-center mb-4">
+        <div className="text-4xl font-bold text-gray-800">{formatTime(timeLeft)}</div>
       </div>
       
-      <div className="w-full bg-gray-200 rounded-full h-2.5 mb-4">
+      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
         <div 
-          className={`h-2.5 rounded-full transition-all ${getTimerColor()}`} 
+          className={`h-2 rounded-full transition-all ${getTimerColor()}`} 
           style={{ width: `${percentageLeft}%` }}
         ></div>
       </div>
