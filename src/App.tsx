@@ -7,6 +7,8 @@ import Testimonials from './components/Testimonials';
 import FAQ from './components/FAQ';
 import Contact from './components/Contact';
 import Footer from './components/Footer';
+import QuizListPage from './pages/QuizListPage';
+import QuizPage from './pages/QuizPage';
 
 // Blog Pages
 import BlogIndex from './pages/blog/BlogIndex';
@@ -39,6 +41,10 @@ const App = () => {
               <Contact />
             </div>
           } />
+          
+          {/* Quiz Routes */}
+          <Route path="/quizzes" element={<QuizListPage />} />
+          <Route path="/quiz/:quizId" element={<QuizPage />} />
           
           {/* Blog Routes */}
           <Route path="/blog" element={<BlogIndex />} />
