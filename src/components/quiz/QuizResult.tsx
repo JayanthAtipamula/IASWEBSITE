@@ -1,5 +1,5 @@
 import React from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Question } from './QuizQuestion';
 
 interface QuizResultProps {
@@ -7,6 +7,7 @@ interface QuizResultProps {
   userAnswers: (number | null)[];
   timeTaken: number;
   quizTitle: string;
+  quizId: string;
 }
 
 const QuizResult: React.FC<QuizResultProps> = ({
@@ -14,9 +15,8 @@ const QuizResult: React.FC<QuizResultProps> = ({
   userAnswers,
   timeTaken,
   quizTitle,
+  quizId,
 }) => {
-  const navigate = useNavigate();
-  
   // Calculate score
   const correctAnswers = questions.filter(
     (question, index) => userAnswers[index] === question.correctAnswer
@@ -58,16 +58,9 @@ const QuizResult: React.FC<QuizResultProps> = ({
   
   const resultMessage = getResultMessage();
   
-  // Handle retry quiz
-  const handleRetryQuiz = () => {
-    // Get the quiz ID from the title
-    const quizId = quizTitle.toLowerCase().replace(/\s+/g, '-');
-    
-    // Clear the localStorage data for this quiz
+  // Clear any saved quiz state before retrying
+  const handleRetry = () => {
     localStorage.removeItem(`quiz_${quizId}_state`);
-    
-    // Navigate to the quiz page
-    navigate(`/quiz/${quizId}`);
   };
   
   return (
@@ -159,12 +152,13 @@ const QuizResult: React.FC<QuizResultProps> = ({
           >
             Back to Quizzes
           </Link>
-          <button 
-            onClick={handleRetryQuiz}
+          <Link 
+            to={`/quiz/${quizId}`} 
+            onClick={handleRetry}
             className="px-6 py-2 bg-gray-100 text-gray-800 rounded-md font-medium hover:bg-gray-200"
           >
             Retry Quiz
-          </button>
+          </Link>
         </div>
       </div>
     </div>

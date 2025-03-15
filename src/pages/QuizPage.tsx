@@ -398,6 +398,7 @@ const QuizPage: React.FC = () => {
             userAnswers={userAnswers}
             timeTaken={timeTaken}
             quizTitle={currentQuizData.quiz.title}
+            quizId={quizId || ''}
           />
         </div>
       </div>
