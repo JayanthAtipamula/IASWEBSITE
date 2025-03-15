@@ -1,0 +1,41 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-red: #c80405;
+  --primary-blue: #012690;
+}
+
+@layer base {
+  body {
+    @apply antialiased;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-bold tracking-tight;
+  }
+}
+
+@layer components {
+  .container-custom {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8;
+  }
+
+  .btn-primary {
+    @apply bg-[var(--primary-red)] text-white px-6 py-3 rounded-lg font-semibold 
+    transition-all duration-300 hover:bg-opacity-90 hover:scale-105;
+  }
+
+  .nav-link {
+    @apply text-gray-700 hover:text-[var(--primary-blue)] transition-colors duration-300;
+  }
+}
+
+.carousel {
+  @apply relative overflow-hidden;
+}
+
+.carousel-item {
+  @apply absolute w-full h-full transition-opacity duration-500;
+}
