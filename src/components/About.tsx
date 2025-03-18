@@ -41,7 +41,7 @@ const About = () => {
           </div>
           <div className="relative h-96 flex items-center justify-center mx-4 md:mx-8">
             <img 
-              src="\aboutbanner.png" 
+              src="/aboutbanner.png" 
               alt="Epitome IAS Logo" 
               className="max-w-full max-h-full object-contain rounded-xl"
             />
