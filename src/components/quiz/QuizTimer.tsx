@@ -1,22 +1,31 @@
 import React, { useState, useEffect } from 'react';
 
 interface QuizTimerProps {
-  remainingSeconds: number;
+  startTime: number;
   totalSeconds: number;
   onTimeUp: () => void;
+  onSubmit?: (timeSpent: number) => void;
 }
 
 const QuizTimer: React.FC<QuizTimerProps> = ({ 
-  remainingSeconds, 
+  startTime, 
   totalSeconds, 
-  onTimeUp 
+  onTimeUp,
+  onSubmit
 }) => {
-  const [timeLeft, setTimeLeft] = useState(remainingSeconds);
+  const [timeLeft, setTimeLeft] = useState(totalSeconds);
   
-  // Update timeLeft when remainingSeconds changes
+  // Initialize timer on component mount
   useEffect(() => {
-    setTimeLeft(remainingSeconds);
-  }, [remainingSeconds]);
+    // Calculate elapsed time and update remaining time
+    const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
+    const newRemainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
+    setTimeLeft(newRemainingSeconds);
+    
+    if (newRemainingSeconds <= 0) {
+      onTimeUp();
+    }
+  }, [startTime, totalSeconds, onTimeUp]);
   
   useEffect(() => {
     if (timeLeft <= 0) {
@@ -55,20 +64,37 @@ const QuizTimer: React.FC<QuizTimerProps> = ({
     return 'bg-red-500';
   };
   
+  // Handle manual submission
+  const handleSubmit = () => {
+    if (onSubmit) {
+      const timeSpent = totalSeconds - timeLeft;
+      onSubmit(timeSpent);
+    }
+  };
+  
   return (
-    <div className="bg-white shadow-md rounded-lg p-6">
-      <h3 className="text-lg font-medium text-gray-900 mb-4">Time Remaining</h3>
+    <div className="bg-white shadow-sm rounded-lg p-6">
+      <h3 className="text-lg font-semibold text-gray-800 mb-4">Time Remaining</h3>
       
-      <div className="flex items-center justify-center mb-4">
-        <div className="text-3xl font-bold">{formatTime(timeLeft)}</div>
+      <div className="text-center mb-4">
+        <div className="text-4xl font-bold text-gray-800">{formatTime(timeLeft)}</div>
       </div>
       
-      <div className="w-full bg-gray-200 rounded-full h-2.5">
+      <div className="w-full bg-gray-200 rounded-full h-2 mb-4">
         <div 
-          className={`h-2.5 rounded-full transition-all ${getTimerColor()}`} 
+          className={`h-2 rounded-full transition-all ${getTimerColor()}`} 
           style={{ width: `${percentageLeft}%` }}
         ></div>
       </div>
+      
+      {onSubmit && (
+        <button
+          onClick={handleSubmit}
+          className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors"
+        >
+          Submit Quiz
+        </button>
+      )}
     </div>
   );
 };
