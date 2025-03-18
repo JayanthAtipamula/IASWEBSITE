@@ -1,54 +1,99 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { getActiveBanners, Banner } from '../services/bannerService';
+import LoadingScreen from './LoadingScreen';
 
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [banners, setBanners] = useState<Banner[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const banners = [
+  // Fallback banners in case Firebase data is not available
+  const fallbackBanners = [
     {
-      image: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=2070",
-      link: "/study-materials"
+      id: '1',
+      imageUrl: "https://images.unsplash.com/photo-1497633762265-9d179a990aa6?auto=format&fit=crop&q=80&w=2070",
+      link: "/study-materials",
+      title: "",
+      order: 0,
+      active: true,
+      createdAt: Date.now()
     },
     {
-      image: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&q=80&w=2070",
-      link: "/mock-tests"
-    },
-    {
-      image: "https://images.unsplash.com/photo-1434030216411-0b793f4b4173?auto=format&fit=crop&q=80&w=2070",
-      link: "/live-classes"
-    },
-    {
-      image: "https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=2070",
-      link: "/success-stories"
-    },
-    {
-      image: "https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?auto=format&fit=crop&q=80&w=2070",
-      link: "/mentorship"
+      id: '2',
+      imageUrl: "https://images.unsplash.com/photo-1513258496099-48168024aec0?auto=format&fit=crop&q=80&w=2070",
+      link: "/mock-tests",
+      title: "",
+      order: 1,
+      active: true,
+      createdAt: Date.now()
     }
   ];
 
   useEffect(() => {
+    const fetchBanners = async () => {
+      try {
+        setLoading(true);
+        const fetchedBanners = await getActiveBanners();
+        
+        if (fetchedBanners.length > 0) {
+          setBanners(fetchedBanners);
+        } else {
+          console.log('No active banners found, using fallback banners');
+          setBanners(fallbackBanners);
+        }
+      } catch (error) {
+        console.error('Error fetching banners:', error);
+        setBanners(fallbackBanners);
+      } finally {
+        // Add a small delay to show loading animation
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
+      }
+    };
+
+    fetchBanners();
+  }, []);
+
+  useEffect(() => {
+    if (banners.length === 0) return;
+    
     const timer = setInterval(() => {
       setCurrentSlide((prev) => (prev + 1) % banners.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [banners.length]);
 
   const nextSlide = () => {
+    if (banners.length === 0) return;
     setCurrentSlide((prev) => (prev + 1) % banners.length);
   };
 
   const prevSlide = () => {
+    if (banners.length === 0) return;
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
+
+  if (loading) {
+    return <LoadingScreen />;
+  }
+
+  if (banners.length === 0) {
+    return (
+      <section className="relative h-[50vh] bg-gray-100 flex items-center justify-center">
+        <div className="text-gray-500">No banners available</div>
+      </section>
+    );
+  }
 
   return (
     <section className="relative h-[50vh]">
       {/* Banner Images */}
       {banners.map((banner, index) => (
         <motion.div
-          key={index}
+          key={banner.id}
           initial={{ opacity: 0 }}
           animate={{ opacity: index === currentSlide ? 1 : 0 }}
           transition={{ duration: 0.5 }}
@@ -57,7 +102,7 @@ const Hero = () => {
           <a href={banner.link} className="block h-full">
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-500 hover:scale-105"
-              style={{ backgroundImage: `url(${banner.image})` }}
+              style={{ backgroundImage: `url(${banner.imageUrl})` }}
             />
           </a>
         </motion.div>
@@ -81,7 +126,7 @@ const Hero = () => {
 
       {/* Dots Navigation */}
       <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 flex space-x-2">
-        {banners.map((_, index) => (
+        {banners.map((banner, index) => (
           <button
             key={index}
             onClick={() => setCurrentSlide(index)}

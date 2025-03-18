@@ -65,7 +65,7 @@ const Resources = () => {
   ];
 
   return (
-    <section id="resources" className="py-20 bg-gray-50">
+    <section id="resources" className="py-16 bg-gray-50">
       <div className="container-custom">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

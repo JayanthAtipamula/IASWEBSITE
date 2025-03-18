@@ -3,6 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { getBlogPostBySlug, getCategories, getPublishedPosts } from '../../services/blogService';
 import { BlogPost as BlogPostType, Category } from '../../types/blog';
 import { ChevronDown, ChevronUp } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const BlogPost: React.FC = () => {
   const { slug } = useParams<{ slug: string }>();
@@ -36,7 +37,10 @@ const BlogPost: React.FC = () => {
       } catch (error) {
         console.error('Error fetching blog post:', error);
       } finally {
-        setLoading(false);
+        // Add a small delay to show loading animation
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
       }
     };
 
@@ -55,16 +59,12 @@ const BlogPost: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!post) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="text-center">
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Note Not Found</h1>
           <p className="text-gray-600 mb-8">The UPSC note you're looking for doesn't exist.</p>
@@ -80,11 +80,11 @@ const BlogPost: React.FC = () => {
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <div className="lg:flex lg:gap-8">
         {/* Left Sidebar - Categories Accordion (hidden on mobile) */}
         <div className="hidden lg:block lg:w-1/4">
-          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-20">
+          <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
             <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
             <div className="space-y-2">
               {categories.map((category) => (

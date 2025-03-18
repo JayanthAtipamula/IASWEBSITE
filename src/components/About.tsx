@@ -2,8 +2,8 @@ import React from 'react';
 
 const About = () => {
   return (
-    <section className="py-16 bg-gray-50">
-      <div className="container mx-auto px-4">
+    <section className="py-16 bg-red-50">
+      <div className="container mx-auto px-4 md:px-8 lg:px-16">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
           <div className="space-y-6">
             <h2 className="text-4xl font-bold text-gray-900">About Us</h2>
@@ -39,13 +39,12 @@ const About = () => {
               </div>
             </div>
           </div>
-          <div className="relative h-96">
-            <div className="bg-blue-100 absolute inset-0 rounded-lg">
-              {/* Placeholder for image */}
-              <div className="flex items-center justify-center h-full">
-                <span className="text-blue-600 text-lg">Image Placeholder</span>
-              </div>
-            </div>
+          <div className="relative h-96 flex items-center justify-center mx-4 md:mx-8">
+            <img 
+              src="\aboutbanner.png" 
+              alt="Epitome IAS Logo" 
+              className="max-w-full max-h-full object-contain rounded-xl"
+            />
           </div>
         </div>
       </div>

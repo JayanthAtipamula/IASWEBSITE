@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, LogIn, LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
@@ -7,8 +7,33 @@ import { useAuth } from '../contexts/AuthContext';
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
+
+  // Effect to handle scrolling after navigation
+  useEffect(() => {
+    // Check for pending scroll either from state or sessionStorage
+    const storedPendingScroll = sessionStorage.getItem('pendingScroll');
+    const currentPendingScroll = pendingScroll || storedPendingScroll;
+    
+    if (currentPendingScroll && location.pathname === '/') {
+      const element = document.getElementById(currentPendingScroll);
+      if (element) {
+        // Use a longer delay to ensure the page is fully rendered
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth' });
+          // Clear both state and sessionStorage
+          setPendingScroll(null);
+          sessionStorage.removeItem('pendingScroll');
+        }, 1000); // Increased to 1000ms for better reliability
+      }
+    } else if (location.pathname !== '/') {
+      // Reset scroll position for non-home pages
+      window.scrollTo(0, 0);
+    }
+  }, [location.pathname, pendingScroll]);
 
   const menuItems = [
     { title: 'Home', href: '/' },
@@ -19,6 +44,34 @@ const Navbar = () => {
     { title: 'Contact', href: '/#contact' },
     { title: 'Quizzes', href: '/quizzes' },
   ];
+
+  const handleNavigation = (href: string) => {
+    if (href.startsWith('/#')) {
+      const sectionId = href.substring(2);
+      
+      // If we're not on the home page, navigate and set both state and sessionStorage
+      if (location.pathname !== '/') {
+        setPendingScroll(sectionId);
+        // Store in sessionStorage to persist across navigation
+        sessionStorage.setItem('pendingScroll', sectionId);
+        navigate('/');
+      } else {
+        // If we're already on home page, just scroll
+        const element = document.getElementById(sectionId);
+        if (element) {
+          element.scrollIntoView({ behavior: 'smooth' });
+        }
+      }
+    } else {
+      // For non-hash routes, navigate and scroll to top
+      navigate(href);
+      window.scrollTo(0, 0);
+    }
+    
+    // Close menus
+    setIsOpen(false);
+    setUserMenuOpen(false);
+  };
 
   const handleSignOut = async () => {
     try {
@@ -34,27 +87,27 @@ const Navbar = () => {
       <div className="container-custom">
         <div className="flex justify-between items-center h-16">
           <div className="flex items-center">
-            <Link to="/">
+            <button onClick={() => handleNavigation('/')} className="focus:outline-none">
               <img 
                 src="https://i.postimg.cc/qMYWSV1h/Untitled-design-12.png" 
                 alt="UPSC Guide Logo" 
                 className="h-12 w-auto"
               />
-            </Link>
+            </button>
           </div>
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
             {menuItems.map((item) => (
-              <Link
+              <button
                 key={item.title}
-                to={item.href}
+                onClick={() => handleNavigation(item.href)}
                 className={`nav-link ${
                   location.pathname === item.href ? 'text-blue-600' : ''
                 }`}
               >
                 {item.title}
-              </Link>
+              </button>
             ))}
             
             {user ? (
@@ -81,23 +134,21 @@ const Navbar = () => {
                 
                 {userMenuOpen && (
                   <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
-                    <Link 
-                      to="/profile" 
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      onClick={() => setUserMenuOpen(false)}
+                    <button 
+                      onClick={() => handleNavigation('/profile')}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
                       <User className="w-4 h-4 inline mr-2" />
                       Your Profile
-                    </Link>
+                    </button>
                     {isAdmin && (
-                      <Link 
-                        to="/admin" 
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        onClick={() => setUserMenuOpen(false)}
+                      <button 
+                        onClick={() => handleNavigation('/admin')}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                       >
                         <Settings className="w-4 h-4 inline mr-2" />
                         Admin Panel
-                      </Link>
+                      </button>
                     )}
                     <button
                       onClick={handleSignOut}
@@ -110,10 +161,10 @@ const Navbar = () => {
                 )}
               </div>
             ) : (
-              <Link to="/login" className="flex items-center btn-primary">
+              <button onClick={() => handleNavigation('/login')} className="flex items-center btn-primary">
                 <LogIn className="w-4 h-4 mr-2" />
                 Sign in
-              </Link>
+              </button>
             )}
           </div>
 
@@ -136,16 +187,15 @@ const Navbar = () => {
             >
               <div className="px-2 pt-2 pb-3 space-y-1">
                 {menuItems.map((item) => (
-                  <Link
+                  <button
                     key={item.title}
-                    to={item.href}
-                    className={`block px-3 py-2 rounded-md text-base nav-link ${
+                    onClick={() => handleNavigation(item.href)}
+                    className={`block w-full text-left px-3 py-2 rounded-md text-base nav-link ${
                       location.pathname === item.href ? 'text-blue-600' : ''
                     }`}
-                    onClick={() => setIsOpen(false)}
                   >
                     {item.title}
-                  </Link>
+                  </button>
                 ))}
                 
                 {user ? (
@@ -167,24 +217,22 @@ const Navbar = () => {
                       </span>
                     </div>
                     
-                    <Link
-                      to="/profile"
-                      className="flex items-center px-3 py-2 text-base nav-link"
-                      onClick={() => setIsOpen(false)}
+                    <button
+                      onClick={() => handleNavigation('/profile')}
+                      className="flex items-center w-full text-left px-3 py-2 text-base nav-link"
                     >
                       <User className="w-4 h-4 mr-2" />
                       Your Profile
-                    </Link>
+                    </button>
                     
                     {isAdmin && (
-                      <Link
-                        to="/admin"
-                        className="flex items-center px-3 py-2 text-base nav-link"
-                        onClick={() => setIsOpen(false)}
+                      <button
+                        onClick={() => handleNavigation('/admin')}
+                        className="flex items-center w-full text-left px-3 py-2 text-base nav-link"
                       >
                         <Settings className="w-4 h-4 mr-2" />
                         Admin Panel
-                      </Link>
+                      </button>
                     )}
                     
                     <button
@@ -196,14 +244,13 @@ const Navbar = () => {
                     </button>
                   </div>
                 ) : (
-                  <Link
-                    to="/login"
+                  <button
+                    onClick={() => handleNavigation('/login')}
                     className="flex items-center btn-primary w-full justify-center mt-4"
-                    onClick={() => setIsOpen(false)}
                   >
                     <LogIn className="w-4 h-4 mr-2" />
                     Sign in
-                  </Link>
+                  </button>
                 )}
               </div>
             </motion.div>

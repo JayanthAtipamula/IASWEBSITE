@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCategories, createCategory, updateCategory, deleteCategory } from '../../services/blogService';
 import { Category } from '../../types/blog';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const Categories: React.FC = () => {
   const [categories, setCategories] = useState<Category[]>([]);
@@ -15,7 +16,9 @@ const Categories: React.FC = () => {
     } catch (error) {
       console.error('Error fetching categories:', error);
     } finally {
-      setLoading(false);
+      setTimeout(() => {
+        setLoading(false);
+      }, 800);
     }
   };
 
@@ -72,11 +75,7 @@ const Categories: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

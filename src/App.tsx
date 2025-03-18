@@ -31,6 +31,7 @@ import Categories from './pages/admin/Categories';
 import Quizzes from './pages/admin/Quizzes';
 import QuizEditor from './pages/admin/QuizEditor';
 import QuizAttempts from './pages/admin/QuizAttempts';
+import Banners from './pages/admin/Banners';
 
 const App = () => {
   return (
@@ -73,12 +74,13 @@ const App = () => {
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<ProtectedRoute requireAdmin={true}><AdminLayout /></ProtectedRoute>}>
+          <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
             <Route index element={<Dashboard />} />
             <Route path="posts" element={<BlogPosts />} />
             <Route path="posts/new" element={<BlogPostEditor />} />
             <Route path="posts/edit/:id" element={<BlogPostEditor />} />
             <Route path="categories" element={<Categories />} />
+            <Route path="banners" element={<Banners />} />
             <Route path="quizzes" element={<Quizzes />} />
             <Route path="quizzes/new" element={<QuizEditor />} />
             <Route path="quizzes/edit/:id" element={<QuizEditor />} />

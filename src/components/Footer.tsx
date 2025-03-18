@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Mail, Phone, MapPin, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
+import { Mail, Phone, MapPin, Clock, Facebook, Twitter, Linkedin, Instagram } from 'lucide-react';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -13,23 +13,23 @@ const Footer = () => {
           <div>
             <img 
               src="https://i.postimg.cc/qMYWSV1h/Untitled-design-12.png" 
-              alt="UPSC Guide Logo" 
+              alt="Epitome IAS Logo" 
               className="h-12 w-auto mb-4"
             />
             <p className="text-gray-200 mb-4">
               Empowering UPSC aspirants with comprehensive study materials and expert guidance.
             </p>
             <div className="flex space-x-4">
-              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="Facebook">
+              <a href="https://facebook.com/epitomeiasacademy" target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white transition-colors" aria-label="Facebook">
                 <Facebook className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="Twitter">
+              <a href="https://x.com/EpitomeIAS" target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white transition-colors" aria-label="Twitter">
                 <Twitter className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="LinkedIn">
+              <a href="https://linkedin.com/in/epitome-ias-academy" target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white transition-colors" aria-label="LinkedIn">
                 <Linkedin className="w-5 h-5" />
               </a>
-              <a href="#" className="text-gray-200 hover:text-white transition-colors" aria-label="Instagram">
+              <a href="https://instagram.com/epitome_ias_academy" target="_blank" rel="noopener noreferrer" className="text-gray-200 hover:text-white transition-colors" aria-label="Instagram">
                 <Instagram className="w-5 h-5" />
               </a>
             </div>
@@ -61,17 +61,21 @@ const Footer = () => {
           <div>
             <h3 className="text-lg font-semibold mb-4">Contact Info</h3>
             <ul className="space-y-4">
-              <li className="flex items-center">
-                <Mail className="w-5 h-5 text-[var(--primary-red)] mr-2" />
-                <span className="text-gray-200">contact@upscguide.com</span>
+              <li className="flex items-start">
+                <Mail className="w-5 h-5 text-[var(--primary-red)] mr-2 mt-1" />
+                <span className="text-gray-200">support@epitomeias.in</span>
               </li>
-              <li className="flex items-center">
-                <Phone className="w-5 h-5 text-[var(--primary-red)] mr-2" />
-                <span className="text-gray-200">+91 98765 43210</span>
+              <li className="flex items-start">
+                <Phone className="w-5 h-5 text-[var(--primary-red)] mr-2 mt-1" />
+                <span className="text-gray-200">+91 70956 06639</span>
               </li>
-              <li className="flex items-center">
-                <MapPin className="w-5 h-5 text-[var(--primary-red)] mr-2" />
-                <span className="text-gray-200">123 Study Center, New Delhi, India</span>
+              <li className="flex items-start">
+                <Clock className="w-5 h-5 text-[var(--primary-red)] mr-2 mt-1" />
+                <span className="text-gray-200">Open ⋅ Closes 9 pm</span>
+              </li>
+              <li className="flex items-start">
+                <MapPin className="w-5 h-5 text-[var(--primary-red)] mr-2 mt-1" />
+                <span className="text-gray-200">RTC X Roads Metro Station, Hyderabad, Telangana 500020</span>
               </li>
             </ul>
           </div>
@@ -96,7 +100,7 @@ const Footer = () => {
         {/* Copyright */}
         <div className="border-t border-white/10 pt-8">
           <p className="text-center text-gray-200">
-            © {currentYear} UPSC Guide. All rights reserved.
+            © {currentYear} Epitome IAS Academy. All rights reserved.
           </p>
         </div>
       </div>

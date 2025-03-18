@@ -5,6 +5,7 @@ import { BlogPost, Category } from '../../types/blog';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { User, Clock, Award, Users } from 'lucide-react';
+import LoadingScreen from '../../components/LoadingScreen';
 
 interface QuizAttempt {
   id: string;
@@ -162,11 +163,7 @@ const Dashboard: React.FC = () => {
   ];
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (error) {

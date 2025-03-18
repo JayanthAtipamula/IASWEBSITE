@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { getBlogPosts, deleteBlogPost } from '../../services/blogService';
 import { BlogPost } from '../../types/blog';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const BlogPosts: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -14,7 +15,10 @@ const BlogPosts: React.FC = () => {
     } catch (error) {
       console.error('Error fetching posts:', error);
     } finally {
-      setLoading(false);
+      // Add a small delay to show loading animation
+      setTimeout(() => {
+        setLoading(false);
+      }, 800);
     }
   };
 
@@ -36,11 +40,7 @@ const BlogPosts: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (

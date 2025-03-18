@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { getPublishedPosts, getCategories } from '../../services/blogService';
 import { BlogPost, Category } from '../../types/blog';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const CategoryPage: React.FC = () => {
   const { categorySlug } = useParams<{ categorySlug: string }>();
@@ -31,7 +32,10 @@ const CategoryPage: React.FC = () => {
       } catch (error) {
         console.error('Error fetching category data:', error);
       } finally {
-        setLoading(false);
+        // Add a small delay to show loading animation
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
       }
     };
 
@@ -39,11 +43,7 @@ const CategoryPage: React.FC = () => {
   }, [categorySlug]);
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   if (!category) {

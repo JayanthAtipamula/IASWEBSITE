@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getPublishedPosts, getCategories } from '../../services/blogService';
 import { BlogPost, Category } from '../../types/blog';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const BlogIndex: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
@@ -20,7 +21,9 @@ const BlogIndex: React.FC = () => {
       } catch (error) {
         console.error('Error fetching blog data:', error);
       } finally {
-        setLoading(false);
+        setTimeout(() => {
+          setLoading(false);
+        }, 800);
       }
     };
 
@@ -40,15 +43,11 @@ const BlogIndex: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+    <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
       <h1 className="text-3xl font-bold text-gray-900 mb-8">UPSC Notes</h1>
       
       <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">

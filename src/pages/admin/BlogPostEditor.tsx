@@ -5,6 +5,7 @@ import { createBlogPost, updateBlogPost, getBlogPost, getCategories } from '../.
 import { useAuth } from '../../contexts/AuthContext';
 import RichTextEditor from '../../components/admin/RichTextEditor';
 import FeaturedImageUpload from '../../components/admin/FeaturedImageUpload';
+import LoadingScreen from '../../components/LoadingScreen';
 
 const BlogPostEditor: React.FC = () => {
   const { id } = useParams();
@@ -107,11 +108,7 @@ const BlogPostEditor: React.FC = () => {
   };
 
   if (loading) {
-    return (
-      <div className="text-center py-12">
-        <div className="text-gray-600">Loading...</div>
-      </div>
-    );
+    return <LoadingScreen />;
   }
 
   return (
