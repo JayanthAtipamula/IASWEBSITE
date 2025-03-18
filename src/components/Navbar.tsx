@@ -12,7 +12,7 @@ const Navbar = () => {
   const menuItems = [
     { title: 'Home', href: '/' },
     { title: 'Resources', href: '/#resources' },
-    { title: 'Blog', href: '/blog' },
+    { title: 'UPSC Notes', href: '/upsc-notes' },
     { title: 'Testimonials', href: '/#testimonials' },
     { title: 'FAQ', href: '/#faq' },
     { title: 'Contact', href: '/#contact' },

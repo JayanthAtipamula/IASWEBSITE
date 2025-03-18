@@ -3,6 +3,8 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BlogPostFormData, Category } from '../../types/blog';
 import { createBlogPost, updateBlogPost, getBlogPost, getCategories } from '../../services/blogService';
 import { useAuth } from '../../contexts/AuthContext';
+import RichTextEditor from '../../components/admin/RichTextEditor';
+import FeaturedImageUpload from '../../components/admin/FeaturedImageUpload';
 
 const BlogPostEditor: React.FC = () => {
   const { id } = useParams();
@@ -15,6 +17,7 @@ const BlogPostEditor: React.FC = () => {
     title: '',
     content: '',
     excerpt: '',
+    metaDescription: '',
     categories: [],
     tags: [],
     author: '',
@@ -34,6 +37,8 @@ const BlogPostEditor: React.FC = () => {
               title: post.title,
               content: post.content,
               excerpt: post.excerpt,
+              metaDescription: post.metaDescription || '',
+              featuredImage: post.featuredImage,
               categories: post.categories,
               tags: post.tags || [],
               author: post.author,
@@ -88,6 +93,14 @@ const BlogPostEditor: React.FC = () => {
     }
   };
 
+  const handleContentChange = (content: string) => {
+    setFormData(prev => ({ ...prev, content }));
+  };
+
+  const handleFeaturedImageChange = (imageUrl: string) => {
+    setFormData(prev => ({ ...prev, featuredImage: imageUrl }));
+  };
+
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
     setFormData(prev => ({ ...prev, categories: selectedOptions }));
@@ -127,18 +140,19 @@ const BlogPostEditor: React.FC = () => {
               />
             </div>
 
+            <FeaturedImageUpload 
+              initialImage={formData.featuredImage} 
+              onImageUploaded={handleFeaturedImageChange} 
+            />
+
             <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
                 Content
               </label>
-              <textarea
-                id="content"
-                name="content"
-                rows={10}
-                required
-                value={formData.content}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              <RichTextEditor 
+                content={formData.content} 
+                onChange={handleContentChange} 
+                placeholder="Write your post content here..."
               />
             </div>
 
@@ -155,6 +169,25 @@ const BlogPostEditor: React.FC = () => {
                 onChange={handleChange}
                 className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
               />
+            </div>
+
+            <div>
+              <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700">
+                Meta Description (for SEO)
+              </label>
+              <textarea
+                id="metaDescription"
+                name="metaDescription"
+                rows={2}
+                value={formData.metaDescription || ''}
+                onChange={handleChange}
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                placeholder="Brief description for search engines (150-160 characters recommended)"
+                maxLength={160}
+              />
+              <p className="mt-1 text-sm text-gray-500">
+                {formData.metaDescription ? formData.metaDescription.length : 0}/160 characters
+              </p>
             </div>
 
             <div>
@@ -175,6 +208,9 @@ const BlogPostEditor: React.FC = () => {
                   </option>
                 ))}
               </select>
+              <p className="mt-1 text-sm text-gray-500">
+                Hold Ctrl (or Cmd) to select multiple categories
+              </p>
             </div>
 
             <div>

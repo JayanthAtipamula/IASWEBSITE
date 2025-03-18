@@ -4,6 +4,7 @@ export interface BlogPost {
   slug: string;
   content: string;
   excerpt: string;
+  metaDescription?: string;
   featuredImage?: string;
   categories: string[];
   tags?: string[];
@@ -18,6 +19,7 @@ export interface BlogPostFormData {
   slug?: string;
   content: string;
   excerpt: string;
+  metaDescription?: string;
   featuredImage?: string;
   categories: string[];
   tags?: string[];

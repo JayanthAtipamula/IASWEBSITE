@@ -10,9 +10,10 @@ import Footer from './components/Footer';
 import QuizListPage from './pages/QuizListPage';
 import QuizPage from './pages/QuizPage';
 
-// Blog Pages
+// UPSC Notes Pages
 import BlogIndex from './pages/blog/BlogIndex';
 import BlogPost from './pages/blog/BlogPost';
+import CategoryPage from './pages/blog/CategoryPage';
 
 // Admin Pages
 import { AuthProvider } from './contexts/AuthContext';
@@ -46,9 +47,10 @@ const App = () => {
           <Route path="/quizzes" element={<QuizListPage />} />
           <Route path="/quiz/:quizId" element={<QuizPage />} />
           
-          {/* Blog Routes */}
-          <Route path="/blog" element={<BlogIndex />} />
-          <Route path="/blog/:slug" element={<BlogPost />} />
+          {/* UPSC Notes Routes */}
+          <Route path="/upsc-notes" element={<BlogIndex />} />
+          <Route path="/upsc-notes/:slug" element={<BlogPost />} />
+          <Route path="/category/:categorySlug" element={<CategoryPage />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<Login />} />

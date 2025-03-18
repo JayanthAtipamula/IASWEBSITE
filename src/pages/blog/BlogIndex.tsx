@@ -7,7 +7,6 @@ const BlogIndex: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>('');
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,9 +27,17 @@ const BlogIndex: React.FC = () => {
     fetchData();
   }, []);
 
-  const filteredPosts = selectedCategory
-    ? posts.filter(post => post.categories.includes(selectedCategory))
-    : posts;
+  // Function to get posts for a specific category
+  const getPostsByCategory = (categoryId: string) => {
+    return posts.filter(post => post.categories.includes(categoryId));
+  };
+
+  // Function to get random number of posts between 10-15 or all if less
+  const getRandomPostsForCategory = (categoryId: string) => {
+    const categoryPosts = getPostsByCategory(categoryId);
+    const maxPosts = Math.min(categoryPosts.length, Math.floor(Math.random() * 6) + 10); // Random between 10-15
+    return categoryPosts.slice(0, maxPosts);
+  };
 
   if (loading) {
     return (
@@ -42,85 +49,48 @@ const BlogIndex: React.FC = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      <div className="lg:grid lg:grid-cols-12 lg:gap-8">
-        <div className="lg:col-span-9">
-          <h1 className="text-3xl font-bold text-gray-900 mb-8">Blog</h1>
-          <div className="space-y-8">
-            {filteredPosts.map((post) => (
-              <article key={post.id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-                <div className="p-6">
-                  <div className="flex items-center space-x-3 text-sm text-gray-500 mb-2">
-                    <time dateTime={new Date(post.createdAt).toISOString()}>
-                      {new Date(post.createdAt).toLocaleDateString()}
-                    </time>
-                    <span>•</span>
-                    <span>{post.author}</span>
-                  </div>
-                  <Link to={`/blog/${post.slug}`} className="block mt-2">
-                    <h2 className="text-2xl font-semibold text-gray-900 hover:text-blue-600">
-                      {post.title}
-                    </h2>
-                    <p className="mt-3 text-gray-600 line-clamp-3">
-                      {post.excerpt}
-                    </p>
-                  </Link>
-                  <div className="mt-4">
-                    {post.categories.map((categoryId) => {
-                      const category = categories.find(c => c.id === categoryId);
-                      return category ? (
-                        <span
-                          key={category.id}
-                          className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-2"
-                        >
-                          {category.name}
-                        </span>
-                      ) : null;
-                    })}
-                  </div>
-                  <div className="mt-4">
-                    <Link
-                      to={`/blog/${post.slug}`}
-                      className="text-blue-600 hover:text-blue-800 font-medium"
-                    >
-                      Read more →
-                    </Link>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        <div className="lg:col-span-3 mt-8 lg:mt-0">
-          <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Categories</h2>
-            <div className="space-y-2">
-              <button
-                onClick={() => setSelectedCategory('')}
-                className={`block w-full text-left px-3 py-2 rounded-md ${
-                  selectedCategory === ''
-                    ? 'bg-blue-100 text-blue-800'
-                    : 'text-gray-600 hover:bg-gray-100'
-                }`}
-              >
-                All Posts
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category.id}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className={`block w-full text-left px-3 py-2 rounded-md ${
-                    selectedCategory === category.id
-                      ? 'bg-blue-100 text-blue-800'
-                      : 'text-gray-600 hover:bg-gray-100'
-                  }`}
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">UPSC Notes</h1>
+      
+      <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
+        {categories.map((category) => {
+          const categoryPosts = getPostsByCategory(category.id);
+          const displayPosts = getRandomPostsForCategory(category.id);
+          
+          return (
+            <div 
+              key={category.id} 
+              className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 break-inside-avoid-column hover:shadow-xl transition-shadow duration-300"
+            >
+              <div className="p-4 flex items-center">
+                <div className="mr-2 text-blue-500 text-2xl font-bold">{categoryPosts.length}</div>
+                <h2 className="text-xl font-semibold text-gray-900">{category.name}</h2>
+              </div>
+              
+              <div className="p-5">
+                <ul className="space-y-1 mb-6">
+                  {displayPosts.map((post) => (
+                    <li key={post.id} className="py-1">
+                      <Link 
+                        to={`/upsc-notes/${post.slug}`}
+                        className="text-blue-600 hover:text-blue-800 hover:underline flex items-start"
+                      >
+                        <span className="text-xs text-gray-500 mr-2 mt-1">•</span>
+                        <span>{post.title}</span>
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+                
+                <Link
+                  to={`/category/${category.slug}`}
+                  className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200 shadow-sm hover:shadow"
                 >
-                  {category.name}
-                </button>
-              ))}
+                  Explore More
+                </Link>
+              </div>
             </div>
-          </div>
-        </div>
+          );
+        })}
       </div>
     </div>
   );
