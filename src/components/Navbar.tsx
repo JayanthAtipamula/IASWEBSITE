@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, LogIn } from 'lucide-react';
+import { Menu, X, LogIn, LogOut, User, Settings } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const location = useLocation();
-  const { user } = useAuth();
+  const { user, isAdmin, signOut } = useAuth();
 
   const menuItems = [
     { title: 'Home', href: '/' },
@@ -18,6 +19,15 @@ const Navbar = () => {
     { title: 'Contact', href: '/#contact' },
     { title: 'Quizzes', href: '/quizzes' },
   ];
+
+  const handleSignOut = async () => {
+    try {
+      await signOut();
+      setUserMenuOpen(false);
+    } catch (error) {
+      console.error('Error signing out:', error);
+    }
+  };
 
   return (
     <nav className="bg-white shadow-lg fixed w-full z-50">
@@ -46,14 +56,63 @@ const Navbar = () => {
                 {item.title}
               </Link>
             ))}
+            
             {user ? (
-              <Link to="/admin" className="flex items-center btn-primary">
-                Admin Panel
-              </Link>
+              <div className="relative">
+                <button 
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  className="flex items-center space-x-2 focus:outline-none"
+                >
+                  <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white">
+                    {user.photoURL ? (
+                      <img 
+                        src={user.photoURL} 
+                        alt={user.displayName || 'User'} 
+                        className="w-8 h-8 rounded-full"
+                      />
+                    ) : (
+                      <User className="w-4 h-4" />
+                    )}
+                  </div>
+                  <span className="text-sm font-medium">
+                    {user.displayName?.split(' ')[0] || 'User'}
+                  </span>
+                </button>
+                
+                {userMenuOpen && (
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                    <Link 
+                      to="/profile" 
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      onClick={() => setUserMenuOpen(false)}
+                    >
+                      <User className="w-4 h-4 inline mr-2" />
+                      Your Profile
+                    </Link>
+                    {isAdmin && (
+                      <Link 
+                        to="/admin" 
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <Settings className="w-4 h-4 inline mr-2" />
+                        Admin Panel
+                      </Link>
+                    )}
+                    <button
+                      onClick={handleSignOut}
+                      className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                    >
+                      <LogOut className="w-4 h-4 inline mr-2" />
+                      Sign out
+                    </button>
+                  </div>
+                )}
+              </div>
             ) : (
-              <Link to="/admin/login" className="flex items-center btn-primary">
+              <Link to="/login" className="flex items-center btn-primary">
                 <LogIn className="w-4 h-4 mr-2" />
-                Login
+                Sign in
               </Link>
             )}
           </div>
@@ -88,22 +147,62 @@ const Navbar = () => {
                     {item.title}
                   </Link>
                 ))}
+                
                 {user ? (
-                  <Link
-                    to="/admin"
-                    className="flex items-center btn-primary w-full justify-center mt-4"
-                    onClick={() => setIsOpen(false)}
-                  >
-                    Admin Panel
-                  </Link>
+                  <div className="mt-4 border-t pt-4">
+                    <div className="flex items-center px-3 py-2">
+                      <div className="w-8 h-8 rounded-full bg-indigo-600 flex items-center justify-center text-white mr-2">
+                        {user.photoURL ? (
+                          <img 
+                            src={user.photoURL} 
+                            alt={user.displayName || 'User'} 
+                            className="w-8 h-8 rounded-full"
+                          />
+                        ) : (
+                          <User className="w-4 h-4" />
+                        )}
+                      </div>
+                      <span className="text-sm font-medium">
+                        {user.displayName || user.email}
+                      </span>
+                    </div>
+                    
+                    <Link
+                      to="/profile"
+                      className="flex items-center px-3 py-2 text-base nav-link"
+                      onClick={() => setIsOpen(false)}
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Your Profile
+                    </Link>
+                    
+                    {isAdmin && (
+                      <Link
+                        to="/admin"
+                        className="flex items-center px-3 py-2 text-base nav-link"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <Settings className="w-4 h-4 mr-2" />
+                        Admin Panel
+                      </Link>
+                    )}
+                    
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center w-full text-left px-3 py-2 text-base nav-link"
+                    >
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
+                    </button>
+                  </div>
                 ) : (
                   <Link
-                    to="/admin/login"
+                    to="/login"
                     className="flex items-center btn-primary w-full justify-center mt-4"
                     onClick={() => setIsOpen(false)}
                   >
                     <LogIn className="w-4 h-4 mr-2" />
-                    Login
+                    Sign in
                   </Link>
                 )}
               </div>

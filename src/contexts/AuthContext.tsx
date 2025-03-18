@@ -3,15 +3,21 @@ import {
   User,
   signInWithEmailAndPassword,
   signOut as firebaseSignOut,
-  onAuthStateChanged
+  onAuthStateChanged,
+  GoogleAuthProvider,
+  signInWithPopup,
+  getAdditionalUserInfo
 } from 'firebase/auth';
-import { auth } from '../config/firebase';
+import { doc, getDoc, setDoc } from 'firebase/firestore';
+import { auth, db } from '../config/firebase';
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
   error: string | null;
-  signIn: (email: string, password: string) => Promise<void>;
+  isAdmin: boolean;
+  signInWithEmail: (email: string, password: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -29,12 +35,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // Check if user is an admin
+  const checkAdminStatus = async (user: User) => {
+    try {
+      const userRef = doc(db, 'admins', user.uid);
+      const userDoc = await getDoc(userRef);
+      return userDoc.exists();
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      return false;
+    }
+  };
 
   useEffect(() => {
     // Set up authentication state observer
     const unsubscribe = onAuthStateChanged(auth, 
-      (user) => {
+      async (user) => {
         setUser(user);
+        if (user) {
+          const adminStatus = await checkAdminStatus(user);
+          setIsAdmin(adminStatus);
+        } else {
+          setIsAdmin(false);
+        }
         setLoading(false);
       },
       (error) => {
@@ -48,10 +73,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return () => unsubscribe();
   }, []);
 
-  const signIn = async (email: string, password: string) => {
+  const signInWithEmail = async (email: string, password: string) => {
     try {
       setError(null);
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const adminStatus = await checkAdminStatus(userCredential.user);
+      
+      if (!adminStatus) {
+        await firebaseSignOut(auth);
+        throw new Error('You do not have admin privileges');
+      }
+      
+      setIsAdmin(true);
     } catch (error) {
       console.error('Sign in error:', error);
       if (error instanceof Error) {
@@ -63,10 +96,46 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const signInWithGoogle = async () => {
+    try {
+      setError(null);
+      const provider = new GoogleAuthProvider();
+      const result = await signInWithPopup(auth, provider);
+      const user = result.user;
+      
+      // Check if this is a new user
+      const details = getAdditionalUserInfo(result);
+      
+      if (details?.isNewUser) {
+        // Create a new user document in Firestore
+        await setDoc(doc(db, 'users', user.uid), {
+          uid: user.uid,
+          email: user.email,
+          displayName: user.displayName,
+          photoURL: user.photoURL,
+          createdAt: new Date(),
+        });
+      }
+      
+      // Check if user is an admin
+      const adminStatus = await checkAdminStatus(user);
+      setIsAdmin(adminStatus);
+    } catch (error) {
+      console.error('Google sign in error:', error);
+      if (error instanceof Error) {
+        setError(error.message);
+      } else {
+        setError('An unknown error occurred during Google sign in');
+      }
+      throw error;
+    }
+  };
+
   const signOut = async () => {
     try {
       setError(null);
       await firebaseSignOut(auth);
+      setIsAdmin(false);
     } catch (error) {
       console.error('Sign out error:', error);
       if (error instanceof Error) {
@@ -82,7 +151,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     user,
     loading,
     error,
-    signIn,
+    isAdmin,
+    signInWithEmail,
+    signInWithGoogle,
     signOut
   };
 

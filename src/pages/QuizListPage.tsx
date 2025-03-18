@@ -1,5 +1,6 @@
 import React from 'react';
 import QuizList from '../components/quiz/QuizList';
+import QuizStats from '../components/quiz/QuizStats';
 
 const QuizListPage: React.FC = () => {
   return (
@@ -13,6 +14,10 @@ const QuizListPage: React.FC = () => {
             <p className="mt-5 max-w-xl mx-auto text-xl text-gray-500">
               Test your knowledge with our interactive quizzes on various topics
             </p>
+          </div>
+          
+          <div className="mb-8">
+            <QuizStats />
           </div>
           
           <QuizList />
