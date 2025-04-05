@@ -11,6 +11,8 @@ import BlogPostComponent from './blog/BlogPost';
 // List of known base routes that should not be treated as custom pages
 const KNOWN_ROUTES = [
   'upsc-notes',
+  'appsc-notes', 
+  'tgpsc-notes', 
   'notes', 
   'quizzes', 
   'quiz', 
@@ -66,7 +68,11 @@ const updateMetaTags = (title: string, description: string, imageUrl?: string) =
   }
 };
 
-const CustomPageView: React.FC = () => {
+interface CustomPageViewProps {
+  isExamPage?: 'upsc' | 'appsc' | 'tgpsc';
+}
+
+const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const [page, setPage] = useState<CustomPage | null>(null);
@@ -77,12 +83,67 @@ const CustomPageView: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string>('/');
-  const [contentType, setContentType] = useState<'custom' | 'blog' | 'none'>('none');
+  const [contentType, setContentType] = useState<'custom' | 'blog' | 'none' | 'exam'>('none');
+  const [pageTitle, setPageTitle] = useState('');
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         setLoading(true);
+
+        // Handle exam-specific pages directly
+        if (isExamPage) {
+          // Set page title based on exam type
+          let title = '';
+          let pageSlug = '';
+          if (isExamPage === 'upsc') {
+            title = 'UPSC Notes';
+            pageSlug = 'upsc-notes';
+          } else if (isExamPage === 'appsc') {
+            title = 'APPSC Notes';
+            pageSlug = 'appsc-notes';
+          } else if (isExamPage === 'tgpsc') {
+            title = 'TGPSC Notes';
+            pageSlug = 'tgpsc-notes';
+          }
+          setPageTitle(title);
+          
+          // Try to fetch a custom page with this slug first, then fall back to showing all
+          const [customPageData, postsData, categoriesData] = await Promise.all([
+            getCustomPageBySlug(pageSlug).catch(err => {
+              console.log(`No custom page found for ${pageSlug}:`, err);
+              return null;
+            }),
+            getPublishedPosts(),
+            getCategories()
+          ]);
+          
+          console.log(`Exam page custom page data:`, customPageData);
+          
+          setPosts(postsData);
+          setCategories(categoriesData);
+          
+          // If we found a custom page for this exam, use its categories
+          if (customPageData) {
+            setPage(customPageData);
+            setContentType('custom');
+            console.log(`Found custom page for ${pageSlug} with categories:`, customPageData.categories);
+          } else {
+            setContentType('exam');
+            console.log(`No custom page found for ${pageSlug}, showing all categories`);
+          }
+          
+          // Update meta tags for exam page
+          updateMetaTags(
+            title,
+            `Study material and notes for ${title}`
+          );
+          
+          setLoading(false);
+          return;
+        }
+
+        // Regular custom page handling
         if (!slug) {
           throw new Error('Page slug is required');
         }
@@ -181,7 +242,7 @@ const CustomPageView: React.FC = () => {
         ogDescription.setAttribute('content', 'Epitome IAS - Your learning partner for competitive exams.');
       }
     };
-  }, [slug, location.pathname]);
+  }, [slug, location.pathname, isExamPage]);
 
   // Function to get posts for a specific category
   const getPostsByCategory = (categoryId: string) => {
@@ -195,10 +256,49 @@ const CustomPageView: React.FC = () => {
     return categoryPosts.slice(0, maxPosts);
   };
 
-  // Get only the categories that are selected for this page
-  const filteredCategories = categories.filter(category => 
-    page?.categories?.includes(category.id)
-  );
+  // Get the filtered categories based on content type
+  const getFilteredCategories = () => {
+    if (contentType === 'custom' && page) {
+      console.log('Custom page categories:', page.categories);
+      console.log('Available categories:', categories.map(c => ({id: c.id, name: c.name})));
+      
+      // Check which categories have posts
+      const categoriesWithPostCounts = page.categories.map(catId => {
+        const category = categories.find(c => c.id === catId);
+        const postCount = posts.filter(p => p.categories.includes(catId)).length;
+        return {
+          id: catId,
+          name: category?.name || 'Unknown',
+          postCount
+        };
+      });
+      
+      console.log('Categories with post counts:', categoriesWithPostCounts);
+      
+      // For custom pages, we filter by the categories array in the page
+      // Include all selected categories even if they don't have posts
+      return categories.filter(category => 
+        page.categories.includes(category.id)
+      );
+    } else if (contentType === 'exam' && isExamPage) {
+      console.log('Exam page type:', isExamPage);
+      console.log('All categories:', categories.map(c => ({id: c.id, name: c.name})));
+      console.log('All posts:', posts.length);
+      console.log('Posts by category:', categories.map(c => ({
+        category: c.name, 
+        postCount: posts.filter(p => p.categories.includes(c.id)).length
+      })));
+      
+      // Show all categories that have at least one post
+      return categories.filter(category => 
+        posts.some(post => post.categories.includes(category.id))
+      );
+    }
+    
+    return [];
+  };
+  
+  const filteredCategories = getFilteredCategories();
 
   if (shouldRedirect) {
     console.log(`Redirecting to ${redirectPath}`);
@@ -214,7 +314,7 @@ const CustomPageView: React.FC = () => {
     return <BlogPostComponent />;
   }
 
-  if (error || contentType === 'none' || !page) {
+  if (error || (contentType === 'none' && !isExamPage)) {
     return (
       <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
@@ -230,16 +330,18 @@ const CustomPageView: React.FC = () => {
     );
   }
 
-  // Render custom page
+  // Render custom page or exam page
   return (
     <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-2">{page.title}</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-2">
+        {contentType === 'exam' ? pageTitle : page?.title}
+      </h1>
       
-      {page.description && (
+      {(contentType === 'custom' && page?.description) && (
         <p className="text-lg text-gray-600 mb-8">{page.description}</p>
       )}
       
-      {page.categories && page.categories.length > 0 ? (
+      {filteredCategories.length > 0 ? (
         <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
           {filteredCategories.map((category) => {
             const categoryPosts = getPostsByCategory(category.id);
@@ -256,45 +358,65 @@ const CustomPageView: React.FC = () => {
                 </div>
                 
                 <div className="p-5">
-                  <ul className="space-y-1 mb-6">
-                    {displayPosts.map((post) => (
-                      <li key={post.id} className="py-1">
-                        <Link 
-                          to={`/${post.slug}`}
-                          className="text-blue-600 hover:text-blue-800 hover:underline flex items-start"
-                        >
-                          <span className="text-xs text-gray-500 mr-2 mt-1">•</span>
-                          <span>{post.title}</span>
-                        </Link>
-                      </li>
-                    ))}
-                  </ul>
-                  
-                  <Link
-                    to={`/category/${category.slug}`}
-                    className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200 shadow-sm hover:shadow"
-                  >
-                    Explore More
-                  </Link>
+                  {categoryPosts.length > 0 ? (
+                    <>
+                      <ul className="space-y-1 mb-6">
+                        {displayPosts.map((post) => (
+                          <li key={post.id} className="py-1">
+                            <Link 
+                              to={`/notes/${post.slug}`}
+                              className="text-blue-600 hover:text-blue-800 hover:underline flex items-start"
+                            >
+                              <span className="text-xs text-gray-500 mr-2 mt-1">•</span>
+                              <span>{post.title}</span>
+                            </Link>
+                          </li>
+                        ))}
+                      </ul>
+                      
+                      <Link
+                        to={`/category/${category.slug}`}
+                        className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200 shadow-sm hover:shadow"
+                      >
+                        Explore More
+                      </Link>
+                    </>
+                  ) : (
+                    <p className="text-gray-500 italic">No posts available in this category yet.</p>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       ) : (
-        <div 
-          className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 p-6"
-          dangerouslySetInnerHTML={{ __html: page.content || '' }}
-        />
-      )}
-
-      {page.categories && filteredCategories.length === 0 && (
-        <div className="bg-white rounded-lg shadow-md p-6 text-center">
-          <p className="text-gray-500">No categories found for this page.</p>
+        <div className="text-center py-16">
+          <h2 className="text-xl text-gray-600">No categories found</h2>
+          <p className="mt-4">
+            {contentType === 'exam' 
+              ? `Please create categories and assign posts to them for ${pageTitle}` 
+              : `This page (${page?.title || slug}) exists but has no categories assigned to it. Please edit it in the admin panel to add categories.`}
+          </p>
+          {isExamPage && (
+            <div className="mt-6 p-4 bg-blue-50 rounded-lg max-w-2xl mx-auto text-left">
+              <h3 className="font-medium mb-2">How to fix this:</h3>
+              <ol className="list-decimal list-inside space-y-2 text-sm text-gray-700">
+                <li>Go to Admin Panel → Custom Pages</li>
+                <li>Create a new page with the slug "{isExamPage === 'upsc' ? 'upsc-notes' : isExamPage === 'appsc' ? 'appsc-notes' : 'tgpsc-notes'}"</li>
+                <li>Assign relevant categories to this page</li>
+                <li>Make sure these categories have posts assigned to them</li>
+                <li>Publish the page</li>
+              </ol>
+            </div>
+          )}
         </div>
       )}
     </div>
   );
+};
+
+CustomPageView.defaultProps = {
+  isExamPage: undefined
 };
 
 export default CustomPageView; 

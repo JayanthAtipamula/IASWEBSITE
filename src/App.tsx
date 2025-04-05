@@ -85,9 +85,9 @@ const App = () => {
           <Route path="/category/:categorySlug" element={<CategoryPage />} />
           
           {/* Exam Specific Notes Routes */}
-          <Route path="/upsc-notes" element={<BlogIndex />} />
-          <Route path="/tgpsc-notes" element={<BlogIndex />} />
-          <Route path="/appsc-notes" element={<BlogIndex />} />
+          <Route path="/upsc-notes" element={<CustomPageView isExamPage="upsc" />} />
+          <Route path="/appsc-notes" element={<CustomPageView isExamPage="appsc" />} />
+          <Route path="/tgpsc-notes" element={<CustomPageView isExamPage="tgpsc" />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />

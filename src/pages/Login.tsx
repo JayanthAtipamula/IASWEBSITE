@@ -90,12 +90,6 @@ const Login: React.FC = () => {
               </span>
             )}
           </button>
-          
-          <div className="text-center">
-            <p className="text-sm text-gray-600">
-              Need admin access? <a href="/admin/login" className="font-medium text-indigo-600 hover:text-indigo-500">Sign in as admin</a>
-            </p>
-          </div>
         </div>
       </div>
     </div>

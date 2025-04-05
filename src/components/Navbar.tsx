@@ -77,6 +77,12 @@ const Navbar = () => {
   ];
 
   const handleNavigation = (href: string) => {
+    // For notes pages, force a full page reload to ensure proper filtering
+    if (href.includes('-notes')) {
+      window.location.href = href;
+      return;
+    }
+    
     if (href.startsWith('/#')) {
       const sectionId = href.substring(2);
       
