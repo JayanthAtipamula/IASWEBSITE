@@ -3,7 +3,7 @@ import { uploadImage } from '../../services/fileUploadService';
 
 interface FeaturedImageUploadProps {
   initialImage?: string;
-  onImageUploaded: (imageUrl: string) => void;
+  onImageUploaded: (imageUrl: string | null) => void;
 }
 
 const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({ 
@@ -70,7 +70,7 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
 
   const handleRemoveImage = () => {
     setImage(undefined);
-    onImageUploaded('');
+    onImageUploaded(null);
   };
 
   return (

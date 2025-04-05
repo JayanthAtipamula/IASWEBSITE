@@ -17,7 +17,7 @@ const Categories: React.FC = () => {
       console.error('Error fetching categories:', error);
     } finally {
       setTimeout(() => {
-        setLoading(false);
+      setLoading(false);
       }, 800);
     }
   };

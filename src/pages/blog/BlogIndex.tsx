@@ -48,7 +48,7 @@ const BlogIndex: React.FC = () => {
 
   return (
     <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <h1 className="text-3xl font-bold text-gray-900 mb-8">UPSC Notes</h1>
+      <h1 className="text-3xl font-bold text-gray-900 mb-8">Notes</h1>
       
       <div className="columns-1 md:columns-2 lg:columns-3 gap-6 space-y-6">
         {categories.map((category) => {
@@ -70,7 +70,7 @@ const BlogIndex: React.FC = () => {
                   {displayPosts.map((post) => (
                     <li key={post.id} className="py-1">
                       <Link 
-                        to={`/upsc-notes/${post.slug}`}
+                        to={`/${post.slug}`}
                         className="text-blue-600 hover:text-blue-800 hover:underline flex items-start"
                       >
                         <span className="text-xs text-gray-500 mr-2 mt-1">•</span>

@@ -22,7 +22,9 @@ const BlogPostEditor: React.FC = () => {
     categories: [],
     tags: [],
     author: '',
-    published: false
+    published: false,
+    isCurrentAffair: false,
+    currentAffairDate: Date.now()
   });
 
   useEffect(() => {
@@ -43,7 +45,9 @@ const BlogPostEditor: React.FC = () => {
               categories: post.categories,
               tags: post.tags || [],
               author: post.author,
-              published: post.published
+              published: post.published,
+              isCurrentAffair: post.isCurrentAffair || false,
+              currentAffairDate: post.currentAffairDate || Date.now()
             });
           }
         } else {
@@ -63,19 +67,59 @@ const BlogPostEditor: React.FC = () => {
     fetchData();
   }, [id, user]);
 
+  // Add this validation function
+  const validateForm = (): { isValid: boolean; error?: string } => {
+    if (!formData.title.trim()) {
+      return { isValid: false, error: 'Title is required' };
+    }
+    
+    if (!formData.content.trim()) {
+      return { isValid: false, error: 'Content is required' };
+    }
+    
+    if (!formData.excerpt.trim()) {
+      return { isValid: false, error: 'Excerpt is required' };
+    }
+    
+    if (formData.isCurrentAffair && !formData.currentAffairDate) {
+      return { isValid: false, error: 'Current affair date is required' };
+    }
+    
+    if (!formData.isCurrentAffair && formData.categories.length === 0) {
+      return { isValid: false, error: 'At least one category is required' };
+    }
+    
+    return { isValid: true };
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Validate form
+    const validation = validateForm();
+    if (!validation.isValid) {
+      alert(validation.error);
+      return;
+    }
+    
     setSaving(true);
+    console.log("Submitting form data:", formData);
 
     try {
       if (id) {
+        console.log("Updating existing post with ID:", id);
         await updateBlogPost(id, formData);
+        console.log("Post updated successfully");
       } else {
-        await createBlogPost(formData);
+        console.log("Creating new post");
+        const newId = await createBlogPost(formData);
+        console.log("New post created with ID:", newId);
       }
       navigate('/admin/posts');
     } catch (error) {
       console.error('Error saving post:', error);
+      // Show error message to user (you could add state for this)
+      alert(`Failed to save post: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
     }
@@ -98,13 +142,28 @@ const BlogPostEditor: React.FC = () => {
     setFormData(prev => ({ ...prev, content }));
   };
 
-  const handleFeaturedImageChange = (imageUrl: string) => {
-    setFormData(prev => ({ ...prev, featuredImage: imageUrl }));
+  const handleFeaturedImageChange = (imageUrl: string | null) => {
+    if (imageUrl === null) {
+      // If null is passed, remove the featuredImage property
+      setFormData(prev => {
+        const newData = { ...prev };
+        delete newData.featuredImage;
+        return newData;
+      });
+    } else if (imageUrl && imageUrl.trim() !== '') {
+      // Only update if we have a valid string
+      setFormData(prev => ({ ...prev, featuredImage: imageUrl }));
+    }
   };
 
   const handleCategoryChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedOptions = Array.from(e.target.selectedOptions).map(option => option.value);
     setFormData(prev => ({ ...prev, categories: selectedOptions }));
+  };
+  
+  const handleDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const date = new Date(e.target.value).getTime();
+    setFormData(prev => ({ ...prev, currentAffairDate: date }));
   };
 
   if (loading) {
@@ -187,7 +246,40 @@ const BlogPostEditor: React.FC = () => {
               </p>
             </div>
 
-            <div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="isCurrentAffair"
+                  id="isCurrentAffair"
+                  checked={formData.isCurrentAffair}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
+                />
+                <label htmlFor="isCurrentAffair" className="block text-sm font-medium text-gray-700">
+                  This is a Current Affair
+                </label>
+              </div>
+
+              {formData.isCurrentAffair && (
+                <div>
+                  <label htmlFor="currentAffairDate" className="block text-sm font-medium text-gray-700">
+                    Current Affair Date
+                  </label>
+                  <input
+                    type="date"
+                    name="currentAffairDate"
+                    id="currentAffairDate"
+                    required={formData.isCurrentAffair}
+                    value={formData.currentAffairDate ? new Date(formData.currentAffairDate).toISOString().substring(0, 10) : ''}
+                    onChange={handleDateChange}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              )}
+            </div>
+
+            <div className={formData.isCurrentAffair ? 'hidden' : ''}>
               <label htmlFor="categories" className="block text-sm font-medium text-gray-700">
                 Categories
               </label>

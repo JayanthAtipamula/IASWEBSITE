@@ -10,7 +10,10 @@ import {
   X,
   BookOpen,
   BarChart,
-  Image
+  Image,
+  FileEdit,
+  GraduationCap,
+  MessageSquare
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -22,7 +25,10 @@ const AdminLayout = () => {
     { title: 'Dashboard', path: '/admin', icon: <LayoutDashboard className="w-5 h-5" /> },
     { title: 'Blog Posts', path: '/admin/posts', icon: <FileText className="w-5 h-5" /> },
     { title: 'Categories', path: '/admin/categories', icon: <Tag className="w-5 h-5" /> },
+    { title: 'Custom Pages', path: '/admin/custom-pages', icon: <FileEdit className="w-5 h-5" /> },
     { title: 'Banners', path: '/admin/banners', icon: <Image className="w-5 h-5" /> },
+    { title: 'Courses', path: '/admin/courses', icon: <GraduationCap className="w-5 h-5" /> },
+    { title: 'Messages', path: '/admin/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { title: 'Quizzes', path: '/admin/quizzes', icon: <BookOpen className="w-5 h-5" /> },
     { title: 'Quiz Attempts', path: '/admin/quiz-attempts', icon: <BarChart className="w-5 h-5" /> },
   ];

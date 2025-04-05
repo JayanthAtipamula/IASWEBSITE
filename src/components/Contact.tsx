@@ -1,8 +1,59 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Mail, Phone, MapPin, Clock, Facebook, Instagram, Twitter, Linkedin } from 'lucide-react';
+import { createMessage } from '../services/messageService';
+import { ContactMessageFormData } from '../types/message';
 
 const Contact = () => {
+  const [formData, setFormData] = useState<ContactMessageFormData>({
+    name: '',
+    phoneNumber: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitSuccess, setSubmitSuccess] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Basic validation
+    if (!formData.name || !formData.phoneNumber || !formData.message) {
+      setError('Please fill out all fields.');
+      return;
+    }
+
+    // Simple phone number validation (should have at least 10 digits)
+    const phoneRegex = /^[0-9+\- ]{10,15}$/;
+    if (!phoneRegex.test(formData.phoneNumber)) {
+      setError('Please enter a valid phone number.');
+      return;
+    }
+
+    setIsSubmitting(true);
+    setError(null);
+
+    try {
+      await createMessage(formData);
+      setSubmitSuccess(true);
+      setFormData({
+        name: '',
+        phoneNumber: '',
+        message: ''
+      });
+    } catch (err) {
+      console.error('Error submitting form:', err);
+      setError('Failed to send your message. Please try again later.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <section id="contact" className="py-16 bg-white">
       <div className="container-custom">
@@ -84,44 +135,80 @@ const Contact = () => {
             whileInView={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <form className="space-y-6">
-              <div>
-                <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
-                  Name
-                </label>
-                <input
-                  type="text"
-                  id="name"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[var(--primary-blue)] focus:border-[var(--primary-blue)]"
-                  placeholder="Your name"
-                />
+            {submitSuccess ? (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-6 text-center">
+                <h3 className="text-xl font-medium text-green-800 mb-2">Message Sent!</h3>
+                <p className="text-green-700 mb-4">
+                  Thank you for contacting us. We will get back to you soon.
+                </p>
+                <button 
+                  onClick={() => setSubmitSuccess(false)}
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors"
+                >
+                  Send Another Message
+                </button>
               </div>
-              <div>
-                <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
-                  Email
-                </label>
-                <input
-                  type="email"
-                  id="email"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[var(--primary-blue)] focus:border-[var(--primary-blue)]"
-                  placeholder="Your email"
-                />
-              </div>
-              <div>
-                <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
-                  Message
-                </label>
-                <textarea
-                  id="message"
-                  rows={4}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[var(--primary-blue)] focus:border-[var(--primary-blue)]"
-                  placeholder="Your message"
-                ></textarea>
-              </div>
-              <button type="submit" className="btn-primary w-full">
-                Send Message
-              </button>
-            </form>
+            ) : (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {error && (
+                  <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                    {error}
+                  </div>
+                )}
+                <div>
+                  <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
+                    Name
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    name="name"
+                    value={formData.name}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[var(--primary-blue)] focus:border-[var(--primary-blue)]"
+                    placeholder="Your name"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700 mb-1">
+                    Phone Number
+                  </label>
+                  <input
+                    type="tel"
+                    id="phoneNumber"
+                    name="phoneNumber"
+                    value={formData.phoneNumber}
+                    onChange={handleChange}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[var(--primary-blue)] focus:border-[var(--primary-blue)]"
+                    placeholder="Your phone number"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">
+                    Message
+                  </label>
+                  <textarea
+                    id="message"
+                    name="message"
+                    value={formData.message}
+                    onChange={handleChange}
+                    rows={4}
+                    className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-[var(--primary-blue)] focus:border-[var(--primary-blue)]"
+                    placeholder="Your message"
+                    required
+                  ></textarea>
+                </div>
+                <button 
+                  type="submit" 
+                  className="btn-primary w-full flex justify-center items-center"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? 'Sending...' : 'Send Message'}
+                </button>
+              </form>
+            )}
           </motion.div>
         </div>
       </div>

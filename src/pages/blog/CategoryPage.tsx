@@ -53,10 +53,10 @@ const CategoryPage: React.FC = () => {
           <h1 className="text-3xl font-bold text-gray-900 mb-4">Category Not Found</h1>
           <p className="text-gray-600 mb-8">The category you're looking for doesn't exist.</p>
           <Link
-            to="/upsc-notes"
+            to="/notes"
             className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200"
           >
-            Back to UPSC Notes
+            Back to Notes
           </Link>
         </div>
       </div>
@@ -67,7 +67,7 @@ const CategoryPage: React.FC = () => {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       <div className="mb-8">
         <Link
-          to="/upsc-notes"
+          to="/notes"
           className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-6"
         >
           ← Back to All Categories
@@ -98,7 +98,7 @@ const CategoryPage: React.FC = () => {
                 <span>•</span>
                 <span>{post.author}</span>
               </div>
-              <Link to={`/upsc-notes/${post.slug}`} className="block mt-2">
+              <Link to={`/${post.slug}`} className="block mt-2">
                 <h2 className="text-2xl font-semibold text-gray-900 hover:text-blue-600">
                   {post.title}
                 </h2>
@@ -108,7 +108,7 @@ const CategoryPage: React.FC = () => {
               </Link>
               <div className="mt-4">
                 <Link
-                  to={`/upsc-notes/${post.slug}`}
+                  to={`/${post.slug}`}
                   className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200 shadow-sm hover:shadow"
                 >
                   Read more

@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getBlogPosts, getCategories } from '../../services/blogService';
+import { getCourses } from '../../services/courseService';
 import { BlogPost, Category } from '../../types/blog';
+import { Course } from '../../types/course';
 import { collection, query, orderBy, limit, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { User, Clock, Award, Users } from 'lucide-react';
+import { User, Clock, Award, Users, GraduationCap } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
 
 interface QuizAttempt {
@@ -30,6 +32,7 @@ interface StatCard {
 const Dashboard: React.FC = () => {
   const [posts, setPosts] = useState<BlogPost[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
+  const [courses, setCourses] = useState<Course[]>([]);
   const [loading, setLoading] = useState(true);
   const [recentAttempts, setRecentAttempts] = useState<QuizAttempt[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -43,12 +46,14 @@ const Dashboard: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [postsData, categoriesData] = await Promise.all([
+        const [postsData, categoriesData, coursesData] = await Promise.all([
           getBlogPosts(),
-          getCategories()
+          getCategories(),
+          getCourses()
         ]);
         setPosts(postsData);
         setCategories(categoriesData);
+        setCourses(coursesData);
       } catch (error) {
         console.error('Error fetching dashboard data:', error);
       } finally {
@@ -181,7 +186,7 @@ const Dashboard: React.FC = () => {
         <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
       </div>
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {/* Posts Overview Card */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -238,6 +243,32 @@ const Dashboard: React.FC = () => {
           </div>
         </div>
 
+        {/* Courses Overview Card */}
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <GraduationCap className="h-6 w-6 text-gray-400" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">Courses</dt>
+                  <dd className="flex items-baseline">
+                    <div className="text-2xl font-semibold text-gray-900">{courses.length}</div>
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-50 px-5 py-3">
+            <div className="text-sm">
+              <Link to="/admin/courses" className="font-medium text-blue-600 hover:text-blue-500">
+                Manage courses
+              </Link>
+            </div>
+          </div>
+        </div>
+
         {/* Quick Actions Card */}
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
@@ -248,6 +279,13 @@ const Dashboard: React.FC = () => {
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 w-full justify-center"
               >
                 Create New Post
+              </Link>
+              <Link
+                to="/admin/courses"
+                className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 w-full justify-center"
+              >
+                <GraduationCap className="w-4 h-4 mr-2" />
+                Create New Course
               </Link>
             </div>
           </div>

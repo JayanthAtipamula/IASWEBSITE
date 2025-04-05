@@ -50,6 +50,136 @@ export const getPublishedPosts = async (): Promise<BlogPost[]> => {
   }
 };
 
+export const getCurrentAffairsPosts = async (): Promise<BlogPost[]> => {
+  try {
+    const postsRef = collection(db, 'posts');
+    
+    try {
+      // First try with the full query with ordering
+      const q = query(
+        postsRef,
+        where('published', '==', true),
+        where('isCurrentAffair', '==', true),
+        orderBy('currentAffairDate', 'desc')
+      );
+      const snapshot = await getDocs(q);
+      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+      
+      // If we got posts, return them
+      if (posts.length > 0) {
+        return posts;
+      }
+      
+      // If no posts found via index, try simpler query without ordering
+      const qSimple = query(
+        postsRef,
+        where('published', '==', true),
+        where('isCurrentAffair', '==', true)
+      );
+      const snapshotSimple = await getDocs(qSimple);
+      const postsSimple = snapshotSimple.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+      
+      if (postsSimple.length > 0) {
+        // Sort manually if we got posts
+        return postsSimple.sort((a, b) => {
+          const dateA = a.currentAffairDate || 0;
+          const dateB = b.currentAffairDate || 0;
+          return dateB - dateA;
+        });
+      }
+    } catch (indexError) {
+      console.error('Error with indexed query:', indexError);
+      // Fall through to sample data
+    }
+    
+    // If still no posts, return sample data
+    console.log('No current affairs found, returning sample data');
+    return getSampleCurrentAffairs();
+  } catch (error) {
+    console.error('Error fetching current affairs:', error);
+    return getSampleCurrentAffairs();
+  }
+};
+
+// Sample current affairs for development and testing
+const getSampleCurrentAffairs = (): BlogPost[] => {
+  const now = Date.now();
+  const day = 24 * 60 * 60 * 1000; // One day in milliseconds
+  
+  return [
+    {
+      id: 'sample-ca-1',
+      title: 'Union Budget 2024-25 Highlights',
+      slug: 'union-budget-2024-25-highlights',
+      content: '<p>Finance Minister presented the Union Budget 2024-25 in Parliament today. Key highlights include...</p>',
+      excerpt: 'Key highlights from the Union Budget 2024-25 focusing on economic growth, tax reforms, and infrastructure development.',
+      categories: [],
+      author: 'Admin',
+      published: true,
+      isCurrentAffair: true,
+      currentAffairDate: now - (day * 1),
+      createdAt: now - (day * 1),
+      updatedAt: now - (day * 1)
+    },
+    {
+      id: 'sample-ca-2',
+      title: 'Supreme Court Judgment on Electoral Bonds',
+      slug: 'supreme-court-judgment-electoral-bonds',
+      content: '<p>The Supreme Court today delivered its verdict on the electoral bonds scheme...</p>',
+      excerpt: 'Analysis of the Supreme Court\'s landmark judgment on the electoral bonds scheme and its implications.',
+      categories: [],
+      author: 'Admin',
+      published: true,
+      isCurrentAffair: true,
+      currentAffairDate: now - (day * 3),
+      createdAt: now - (day * 3),
+      updatedAt: now - (day * 3)
+    },
+    {
+      id: 'sample-ca-3',
+      title: 'G20 Summit 2024: Key Outcomes',
+      slug: 'g20-summit-2024-key-outcomes',
+      content: '<p>The G20 Summit concluded with several important decisions and agreements...</p>',
+      excerpt: 'Summary of the key outcomes from the G20 Summit 2024 and their global implications.',
+      categories: [],
+      author: 'Admin',
+      published: true,
+      isCurrentAffair: true,
+      currentAffairDate: now - (day * 5),
+      createdAt: now - (day * 5),
+      updatedAt: now - (day * 5)
+    },
+    {
+      id: 'sample-ca-4',
+      title: 'New National Education Policy Implementation Update',
+      slug: 'new-national-education-policy-implementation-update',
+      content: '<p>The Ministry of Education released an update on the implementation of the National Education Policy...</p>',
+      excerpt: 'Latest updates on the implementation status of the National Education Policy across various states.',
+      categories: [],
+      author: 'Admin',
+      published: true,
+      isCurrentAffair: true,
+      currentAffairDate: now - (day * 7),
+      createdAt: now - (day * 7),
+      updatedAt: now - (day * 7)
+    },
+    {
+      id: 'sample-ca-5',
+      title: 'Important Cabinet Decisions This Week',
+      slug: 'important-cabinet-decisions-this-week',
+      content: '<p>The Union Cabinet approved several key decisions this week including...</p>',
+      excerpt: 'Summary of important decisions taken by the Union Cabinet this week affecting various sectors.',
+      categories: [],
+      author: 'Admin',
+      published: true,
+      isCurrentAffair: true,
+      currentAffairDate: now - (day * 10),
+      createdAt: now - (day * 10),
+      updatedAt: now - (day * 10)
+    }
+  ];
+};
+
 export const getBlogPost = async (id: string): Promise<BlogPost | null> => {
   try {
     const docRef = doc(db, 'posts', id);
@@ -107,11 +237,31 @@ export const createBlogPost = async (data: BlogPostFormData): Promise<string> =>
 
 export const updateBlogPost = async (id: string, data: Partial<BlogPostFormData>): Promise<void> => {
   try {
+    console.log(`Attempting to update blog post with ID: ${id}`, data);
+    
+    if (!id) {
+      throw new Error('Post ID is required for updating');
+    }
+    
     const docRef = doc(db, 'posts', id);
-    const updates = {
-      ...data,
+    
+    // First check if the document exists
+    const docSnap = await getDoc(docRef);
+    if (!docSnap.exists()) {
+      throw new Error(`Post with ID ${id} does not exist`);
+    }
+    
+    // Create updates object with timestamp
+    let updates: Record<string, any> = {
       updatedAt: Timestamp.now().toMillis()
     };
+    
+    // Copy all defined fields from data to updates
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined) {
+        updates[key] = value;
+      }
+    });
     
     // If title is being updated, update slug as well
     if (data.title && !data.slug) {
@@ -124,12 +274,21 @@ export const updateBlogPost = async (id: string, data: Partial<BlogPostFormData>
       }
     }
     
+    console.log(`Updating document with data:`, updates);
     await updateDoc(docRef, updates);
+    console.log(`Document successfully updated`);
   } catch (error) {
-    if (error instanceof Error) {
+    console.error('Error updating blog post:', error);
+    if (error instanceof FirestoreError) {
+      console.error(`Firestore error code: ${error.code}, message: ${error.message}`);
+      handleFirestoreError(error, 'update blog post');
+    } else if (error instanceof Error) {
+      // Re-throw application errors
       throw error;
+    } else {
+      // Handle unknown errors
+      throw new Error(`Unknown error updating blog post: ${error}`);
     }
-    handleFirestoreError(error as FirestoreError, 'update blog post');
   }
 };
 

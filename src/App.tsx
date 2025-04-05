@@ -9,8 +9,10 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import QuizListPage from './pages/QuizListPage';
 import QuizPage from './pages/QuizPage';
+import CoursesPage from './pages/CoursesPage';
+import CurrentAffairsPage from './pages/CurrentAffairsPage';
 
-// UPSC Notes Pages
+// Notes Pages
 import BlogIndex from './pages/blog/BlogIndex';
 import BlogPost from './pages/blog/BlogPost';
 import CategoryPage from './pages/blog/CategoryPage';
@@ -32,6 +34,10 @@ import Quizzes from './pages/admin/Quizzes';
 import QuizEditor from './pages/admin/QuizEditor';
 import QuizAttempts from './pages/admin/QuizAttempts';
 import Banners from './pages/admin/Banners';
+import CustomPages from './pages/admin/CustomPages';
+import CustomPageView from './pages/CustomPageView';
+import AdminCourses from './pages/admin/Courses';
+import Messages from './pages/admin/Messages';
 
 const App = () => {
   return (
@@ -67,10 +73,21 @@ const App = () => {
             </ProtectedRoute>
           } />
           
-          {/* UPSC Notes Routes */}
-          <Route path="/upsc-notes" element={<BlogIndex />} />
-          <Route path="/upsc-notes/:slug" element={<BlogPost />} />
+          {/* Courses Route */}
+          <Route path="/courses" element={<CoursesPage />} />
+          
+          {/* Current Affairs Route */}
+          <Route path="/current-affairs" element={<CurrentAffairsPage />} />
+          
+          {/* Notes Routes */}
+          <Route path="/notes" element={<BlogIndex />} />
+          <Route path="/notes/:slug" element={<BlogPost />} />
           <Route path="/category/:categorySlug" element={<CategoryPage />} />
+          
+          {/* Exam Specific Notes Routes */}
+          <Route path="/upsc-notes" element={<BlogIndex />} />
+          <Route path="/tgpsc-notes" element={<BlogIndex />} />
+          <Route path="/appsc-notes" element={<BlogIndex />} />
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -80,12 +97,18 @@ const App = () => {
             <Route path="posts/new" element={<BlogPostEditor />} />
             <Route path="posts/edit/:id" element={<BlogPostEditor />} />
             <Route path="categories" element={<Categories />} />
+            <Route path="custom-pages" element={<CustomPages />} />
             <Route path="banners" element={<Banners />} />
+            <Route path="courses" element={<AdminCourses />} />
             <Route path="quizzes" element={<Quizzes />} />
             <Route path="quizzes/new" element={<QuizEditor />} />
             <Route path="quizzes/edit/:id" element={<QuizEditor />} />
             <Route path="quiz-attempts" element={<QuizAttempts />} />
+            <Route path="messages" element={<Messages />} />
           </Route>
+          
+          {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
+          <Route path="/:slug" element={<CustomPageView />} />
           
           {/* Catch-all route */}
           <Route path="*" element={<Navigate to="/" replace />} />

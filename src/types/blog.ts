@@ -10,6 +10,8 @@ export interface BlogPost {
   tags?: string[];
   author: string;
   published: boolean;
+  isCurrentAffair?: boolean;
+  currentAffairDate?: number;
   createdAt: number;
   updatedAt: number;
 }
@@ -25,6 +27,8 @@ export interface BlogPostFormData {
   tags?: string[];
   author: string;
   published: boolean;
+  isCurrentAffair?: boolean;
+  currentAffairDate?: number;
 }
 
 export interface Category {
