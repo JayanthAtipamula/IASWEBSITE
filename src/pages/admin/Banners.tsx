@@ -9,6 +9,7 @@ import {
   deleteBanner,
   reorderBanners
 } from '../../services/bannerService';
+import { getProxiedImageUrl } from '../../utils/imageUtils';
 
 const Banners: React.FC = () => {
   const [banners, setBanners] = useState<Banner[]>([]);
@@ -182,7 +183,7 @@ const Banners: React.FC = () => {
 
   const startEditing = (banner: Banner) => {
     setIsEditing(banner.id);
-    setTitle(banner.title);
+    setTitle(banner.title || '');
     setLink(banner.link);
     setActive(banner.active);
     setImageFile(null);
@@ -464,7 +465,7 @@ const Banners: React.FC = () => {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="h-16 w-32 overflow-hidden rounded-md bg-gray-100">
                           <img
-                            src={banner.imageUrl}
+                            src={getProxiedImageUrl(banner.imageUrl)}
                             alt={banner.title || `Banner ${index + 1}`}
                             className="h-full w-full object-cover"
                           />

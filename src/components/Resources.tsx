@@ -12,7 +12,7 @@ const Resources = () => {
       bgColor: 'bg-blue-50',
       iconColor: 'text-blue-500',
       hoverColor: 'hover:bg-blue-100',
-      link: '/notes'
+      link: '/upsc-notes'
     },
     {
       title: 'APPSC Notes',

@@ -5,6 +5,8 @@ import LoadingScreen from '../../components/LoadingScreen';
 import { Edit, Trash2, Eye, Plus, Loader, Upload, Link as LinkIcon } from 'lucide-react';
 import { storage } from '../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
+import { getProxiedImageUrl } from '../../utils/imageUtils';
+import CourseImage from '../../components/CourseImage';
 
 const Courses: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -362,14 +364,10 @@ const Courses: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center space-x-4">
                     <div className="flex-shrink-0 h-12 w-12 rounded overflow-hidden">
-                      <img 
-                        src={course.imageUrl} 
+                      <CourseImage 
+                        imagePath={course.imageUrl}
                         alt={course.title} 
                         className="h-12 w-12 object-cover"
-                        onError={(e) => {
-                          // Set fallback image if loading fails
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/100';
-                        }}
                       />
                     </div>
                     <div>
@@ -470,14 +468,10 @@ const Courses: React.FC = () => {
                 <div className="mt-1 flex items-center space-x-4">
                   <div className="flex-shrink-0 h-24 w-24 rounded-md overflow-hidden bg-gray-100 border border-gray-300">
                     {imagePreview ? (
-                      <img
-                        src={imagePreview}
+                      <CourseImage
+                        imagePath={imagePreview}
                         alt="Course preview"
                         className="h-24 w-24 object-cover"
-                        onError={(e) => {
-                          console.error('Image preview failed to load');
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/100';
-                        }}
                       />
                     ) : (
                       <div className="h-24 w-24 flex items-center justify-center text-gray-400">

@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { getActiveBanners, Banner } from '../services/bannerService';
 import LoadingScreen from './LoadingScreen';
+import { getProxiedImageUrl } from '../utils/imageUtils';
 
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -102,7 +103,7 @@ const Hero = () => {
           <a href={banner.link} className="block h-full">
             <div
               className="absolute inset-0 bg-cover bg-center transition-transform duration-500 hover:scale-105"
-              style={{ backgroundImage: `url(${banner.imageUrl})` }}
+              style={{ backgroundImage: `url(${getProxiedImageUrl(banner.imageUrl)})` }}
             />
           </a>
         </motion.div>

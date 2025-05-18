@@ -1,5 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { uploadImage } from '../../services/fileUploadService';
+import { getProxiedImageUrl } from '../../utils/imageUtils';
 
 interface FeaturedImageUploadProps {
   initialImage?: string;
@@ -14,6 +15,9 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Get the display URL (proxied) for the image
+  const displayImageUrl = image ? getProxiedImageUrl(image) : undefined;
 
   const handleImageUpload = async (file: File) => {
     if (!file) return;
@@ -82,7 +86,7 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
       {image ? (
         <div className="relative rounded-lg overflow-hidden border border-gray-200 bg-white">
           <img 
-            src={image} 
+            src={displayImageUrl || image} 
             alt="Featured" 
             className="w-full h-64 object-contain"
           />

@@ -3,6 +3,8 @@ import { getCourses, getSampleCourses } from '../services/courseService';
 import { Course } from '../types/course';
 import { BookOpen, Clock, Check } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
+import { getProxiedImageUrl } from '../utils/imageUtils';
+import CourseImage from '../components/CourseImage';
 
 const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
@@ -74,8 +76,8 @@ const CoursesPage: React.FC = () => {
             className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300 flex flex-col"
           >
             <div className="relative h-48 overflow-hidden">
-              <img 
-                src={course.imageUrl} 
+              <CourseImage 
+                imagePath={course.imageUrl} 
                 alt={course.title} 
                 className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
               />

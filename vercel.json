@@ -4,6 +4,12 @@
   "framework": "vite",
   "routes": [
     { "handle": "filesystem" },
+    { "src": "/api/social-logo", "dest": "/api/social-logo.js" },
+    { "src": "/api/debug-image", "dest": "/api/debug-image.js" },
+    { "src": "/api/images/courses/(.*)", "dest": "/api/course-image/[...path].js?path=courses/$1" },
+    { "src": "/api/course-image/(.*)", "dest": "/api/course-image/[...path].js?path=$1" },
+    { "src": "/api/images/(.*)", "dest": "/api/images/[...path].js" },
+    { "src": "/api/images/courses/1744883588490_THREEATOMS_SOCIAL_LOGO.png", "dest": "/api/social-logo.js" },
     { "src": "/[^.]+", "dest": "/" }
   ]
 } 
