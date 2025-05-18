@@ -1,5 +1,6 @@
 import React from 'react';
-import { Check, ArrowLeft, ArrowRight } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
+import { QuizType } from '../../services/quizService';
 
 interface QuizNavigationProps {
   currentQuestion: number;
@@ -10,6 +11,7 @@ interface QuizNavigationProps {
   onPrevious?: () => void;
   onNext?: () => void;
   userAnswers?: (number | null)[];
+  quizType?: QuizType;
 }
 
 const QuizNavigation: React.FC<QuizNavigationProps> = ({
@@ -21,6 +23,7 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
   onPrevious,
   onNext,
   userAnswers,
+  quizType,
 }) => {
   // Use either answeredQuestions or userAnswers based on which is provided
   const answers = userAnswers || answeredQuestions;
@@ -116,7 +119,7 @@ const QuizNavigation: React.FC<QuizNavigationProps> = ({
         onClick={onSubmit}
         className="w-full py-2 px-4 bg-indigo-600 text-white rounded-md font-medium hover:bg-indigo-700 transition-colors"
       >
-        Submit Quiz
+        {quizType === 'mainsPractice' ? 'Finish Review' : 'Submit Quiz'}
       </button>
     </div>
   );

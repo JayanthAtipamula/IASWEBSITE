@@ -5,9 +5,9 @@ import QuizNavigation from '../components/quiz/QuizNavigation';
 import QuizTimer from '../components/quiz/QuizTimer';
 import QuizResult from '../components/quiz/QuizResult';
 import QuizDetails from '../components/quiz/QuizDetails';
-import { getQuizById, Quiz, QuizQuestion as QuizQuestionType } from '../services/quizService';
+import { getQuizById, Quiz } from '../services/quizService';
 import { useAuth } from '../contexts/AuthContext';
-import { collection, query, where, getDocs, addDoc, serverTimestamp, doc, updateDoc, deleteDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, updateDoc, deleteDoc } from 'firebase/firestore';
 import { db } from '../config/firebase';
 
 interface QuizProgress {
@@ -35,6 +35,7 @@ const QuizPage: React.FC = () => {
   const [error, setError] = useState<string | null>(null);
   const [progressId, setProgressId] = useState<string | null>(null);
   const [startTime, setStartTime] = useState<number | null>(null);
+  const [questionStates, setQuestionStates] = useState<Array<{ showAnswer: boolean }>>([]);
 
   // Load quiz data and any existing progress from database
   useEffect(() => {
@@ -82,6 +83,7 @@ const QuizPage: React.FC = () => {
         } else {
           // No existing progress, initialize with defaults
           setUserAnswers(Array(quizData.questions.length).fill(null));
+          setQuestionStates(Array(quizData.questions.length).fill({ showAnswer: false }));
         }
       } catch (err) {
         console.error('Error loading quiz:', err);
@@ -143,6 +145,15 @@ const QuizPage: React.FC = () => {
 
   // Handle selecting an answer
   const handleSelectAnswer = (answerIndex: number) => {
+    if (quiz?.quizType === 'mainsPractice') {
+      const newQuestionStates = [...questionStates];
+      newQuestionStates[currentQuestionIndex] = { ...newQuestionStates[currentQuestionIndex], showAnswer: true };
+      setQuestionStates(newQuestionStates);
+    }
+    // Always update userAnswers for all quiz types
+    const newUserAnswers = [...userAnswers];
+    newUserAnswers[currentQuestionIndex] = answerIndex;
+    setUserAnswers(newUserAnswers);
     const newAnswers = [...userAnswers];
     newAnswers[currentQuestionIndex] = answerIndex;
     setUserAnswers(newAnswers);
@@ -169,6 +180,20 @@ const QuizPage: React.FC = () => {
 
   // Handle submitting the quiz
   const handleSubmitQuiz = async (timeSpent?: number) => {
+    if (quiz?.quizType === 'mainsPractice') {
+      // For Mains Practice, completing means they've reviewed all questions they wanted to.
+      // We can simply navigate away or to a summary, no need to save score or time in the same way.
+      setQuizCompleted(true); // Mark as completed to show results/summary if any
+      // Optionally, clear progress if it was being saved for some reason for mainsPractice
+      if (progressId) {
+        try {
+          await deleteDoc(doc(db, 'quizProgress', progressId));
+        } catch (err) {
+          console.error('Error deleting quiz progress for mainsPractice:', err);
+        }
+      }
+      return;
+    }
     if (timeSpent) {
       setTimeTaken(timeSpent);
     } else {
@@ -261,6 +286,8 @@ const QuizPage: React.FC = () => {
               question={currentQuestion}
               selectedAnswer={userAnswers[currentQuestionIndex]}
               onSelectAnswer={handleSelectAnswer}
+              quizType={quiz.quizType}
+              showAnswer={quiz.quizType === 'mainsPractice' ? questionStates[currentQuestionIndex]?.showAnswer : false}
               questionNumber={currentQuestionIndex + 1}
               totalQuestions={quiz.questions.length}
             />
@@ -271,6 +298,7 @@ const QuizPage: React.FC = () => {
               startTime={startTime || Date.now()}
               totalSeconds={quiz.timeInMinutes * 60}
               onTimeUp={handleTimeUp}
+              disableTimer={quiz.quizType === 'mainsPractice'}
             />
             
             <QuizNavigation
@@ -279,6 +307,7 @@ const QuizPage: React.FC = () => {
               answeredQuestions={userAnswers}
               onNavigate={handleNavigate}
               onSubmit={() => handleSubmitQuiz()}
+              quizType={quiz.quizType}
               onPrevious={handlePrevQuestion}
               onNext={handleNextQuestion}
             />

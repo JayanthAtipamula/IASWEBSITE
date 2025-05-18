@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import MarqueeBanner from './components/MarqueeBanner';
 import Hero from './components/Hero';
 import Resources from './components/Resources';
 import About from './components/About';
@@ -9,8 +10,24 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import QuizListPage from './pages/QuizListPage';
 import QuizPage from './pages/QuizPage';
+import MainsPYQPage from './pages/quiz/MainsPYQPage';
+import PrelimsPracticePage from './pages/quiz/PrelimsPracticePage';
+import MainsPracticePage from './pages/quiz/MainsPracticePage';
+import TGPSCMainsPYQPage from './pages/quiz/TGPSCMainsPYQPage';
+import TGPSCPrelimsPracticePage from './pages/quiz/TGPSCPrelimsPracticePage';
+import TGPSCMainsPracticePage from './pages/quiz/TGPSCMainsPracticePage';
+import APPSCMainsPYQPage from './pages/quiz/APPSCMainsPYQPage';
+import APPSCPrelimsPracticePage from './pages/quiz/APPSCPrelimsPracticePage';
+import APPSCMainsPracticePage from './pages/quiz/APPSCMainsPracticePage';
 import CoursesPage from './pages/CoursesPage';
 import CurrentAffairsPage from './pages/CurrentAffairsPage';
+import UPSCCurrentAffairsPage from './pages/UPSCCurrentAffairsPage';
+import TGPSCCurrentAffairsPage from './pages/TGPSCCurrentAffairsPage';
+import APPSCCurrentAffairsPage from './pages/APPSCCurrentAffairsPage';
+import UPSCCurrentAffairsDetailPage from './pages/UPSCCurrentAffairsDetailPage';
+import TGPSCCurrentAffairsDetailPage from './pages/TGPSCCurrentAffairsDetailPage';
+import APPSCCurrentAffairsDetailPage from './pages/APPSCCurrentAffairsDetailPage';
+import FirebaseConnectionTest from './components/FirebaseConnectionTest';
 
 // Notes Pages
 import BlogIndex from './pages/blog/BlogIndex';
@@ -44,6 +61,8 @@ const App = () => {
     <AuthProvider>
       <div className="min-h-screen bg-gray-50">
         <Navbar />
+        <MarqueeBanner />
+        <div className="pt-12">
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={
@@ -72,12 +91,32 @@ const App = () => {
               <QuizPage />
             </ProtectedRoute>
           } />
+          {/* UPSC Quiz Routes */}
+          <Route path="/mains-pyqs" element={<MainsPYQPage />} />
+          <Route path="/prelims-practice" element={<PrelimsPracticePage />} />
+          <Route path="/mains-practice" element={<MainsPracticePage />} />
+          
+          {/* TGPSC Quiz Routes */}
+          <Route path="/tgpsc-mains-pyqs" element={<TGPSCMainsPYQPage />} />
+          <Route path="/tgpsc-prelims-practice" element={<TGPSCPrelimsPracticePage />} />
+          <Route path="/tgpsc-mains-practice" element={<TGPSCMainsPracticePage />} />
+          
+          {/* APPSC Quiz Routes */}
+          <Route path="/appsc-mains-pyqs" element={<APPSCMainsPYQPage />} />
+          <Route path="/appsc-prelims-practice" element={<APPSCPrelimsPracticePage />} />
+          <Route path="/appsc-mains-practice" element={<APPSCMainsPracticePage />} />
           
           {/* Courses Route */}
           <Route path="/courses" element={<CoursesPage />} />
           
-          {/* Current Affairs Route */}
+          {/* Current Affairs Routes */}
           <Route path="/current-affairs" element={<CurrentAffairsPage />} />
+          <Route path="/current-affairs/upsc" element={<UPSCCurrentAffairsPage />} />
+          <Route path="/current-affairs/tgpsc" element={<TGPSCCurrentAffairsPage />} />
+          <Route path="/current-affairs/appsc" element={<APPSCCurrentAffairsPage />} />
+          <Route path="/current-affairs/upsc/:dateParam" element={<UPSCCurrentAffairsDetailPage />} />
+          <Route path="/current-affairs/tgpsc/:dateParam" element={<TGPSCCurrentAffairsDetailPage />} />
+          <Route path="/current-affairs/appsc/:dateParam" element={<APPSCCurrentAffairsDetailPage />} />
           
           {/* Notes Routes */}
           <Route path="/notes" element={<BlogIndex />} />
@@ -105,7 +144,11 @@ const App = () => {
             <Route path="quizzes/edit/:id" element={<QuizEditor />} />
             <Route path="quiz-attempts" element={<QuizAttempts />} />
             <Route path="messages" element={<Messages />} />
+            <Route path="firebase-test" element={<FirebaseConnectionTest />} />
           </Route>
+          
+          {/* Firebase Connection Test Route (for development) */}
+          <Route path="/firebase-test" element={<FirebaseConnectionTest />} />
           
           {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
           <Route path="/:slug" element={<CustomPageView />} />
@@ -114,6 +157,7 @@ const App = () => {
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />
+        </div>
       </div>
     </AuthProvider>
   );

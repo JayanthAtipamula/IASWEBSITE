@@ -18,7 +18,12 @@ export interface QuizQuestion {
   question: string;
   options: string[];
   correctAnswer: number;
+  explanation?: string; // Added optional explanation field
 }
+
+export type QuizType = 'mainsPyqs' | 'prelimsPractice' | 'mainsPractice';
+
+export type ExamBoard = 'upsc' | 'tgpsc' | 'appsc';
 
 export interface Quiz {
   id: string;
@@ -27,6 +32,8 @@ export interface Quiz {
   totalQuestions: number;
   timeInMinutes: number;
   difficulty: 'easy' | 'medium' | 'hard';
+  quizType: QuizType;
+  examBoard: ExamBoard;
   createdAt: Timestamp;
   updatedAt: Timestamp;
   questions: QuizQuestion[];

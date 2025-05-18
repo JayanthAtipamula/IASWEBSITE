@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { getCourses, getSampleCourses } from '../services/courseService';
 import { Course } from '../types/course';
-import { BookOpen, Clock, Check } from 'lucide-react';
+import { Clock, Check, FileText, ShoppingCart } from 'lucide-react';
 import LoadingScreen from '../components/LoadingScreen';
 import { getProxiedImageUrl } from '../utils/imageUtils';
 import CourseImage from '../components/CourseImage';
@@ -108,27 +108,49 @@ const CoursesPage: React.FC = () => {
                 </ul>
               </div>
               
-              <div className="flex items-center justify-between mt-auto">
-                <div className="text-2xl font-bold text-blue-600">{formatPrice(course.price)}</div>
-                {course.paymentLink ? (
-                  <a
-                    href={course.paymentLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Buy Now
-                  </a>
-                ) : (
-                  <button
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
-                    onClick={() => window.alert(`Enrollment for ${course.title} will be available soon!`)}
-                  >
-                    <BookOpen className="h-4 w-4 mr-2" />
-                    Enroll Now
-                  </button>
-                )}
+              <div className="mt-auto">
+                <div className="text-2xl font-bold text-blue-600 mb-3">{formatPrice(course.price)}</div>
+                <div className="flex flex-wrap gap-2">
+                  {course.scheduleUrl ? (
+                    <a
+                      href={course.scheduleUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Schedule
+                    </a>
+                  ) : (
+                    <button
+                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                      onClick={() => window.alert(`Schedule for ${course.title} will be available soon!`)}
+                    >
+                      <FileText className="h-4 w-4 mr-2" />
+                      Schedule
+                    </button>
+                  )}
+                  
+                  {course.paymentLink ? (
+                    <a
+                      href={course.paymentLink}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Payment
+                    </a>
+                  ) : (
+                    <button
+                      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                      onClick={() => window.alert(`Enrollment for ${course.title} will be available soon!`)}
+                    >
+                      <ShoppingCart className="h-4 w-4 mr-2" />
+                      Payment
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           </div>

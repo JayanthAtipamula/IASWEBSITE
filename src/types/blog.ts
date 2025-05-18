@@ -12,6 +12,7 @@ export interface BlogPost {
   published: boolean;
   isCurrentAffair?: boolean;
   currentAffairDate?: number;
+  examType?: 'upsc' | 'tgpsc' | 'appsc';
   createdAt: number;
   updatedAt: number;
 }
@@ -29,6 +30,7 @@ export interface BlogPostFormData {
   published: boolean;
   isCurrentAffair?: boolean;
   currentAffairDate?: number;
+  examType?: 'upsc' | 'tgpsc' | 'appsc';
 }
 
 export interface Category {

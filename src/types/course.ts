@@ -7,6 +7,7 @@ export interface Course {
   duration: string;
   features: string[];
   paymentLink?: string;
+  scheduleUrl?: string;
   createdAt: number;
   updatedAt: number;
-} 
+}

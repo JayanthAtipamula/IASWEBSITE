@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { getCourses, getSampleCourses, createCourse, updateCourse, deleteCourse } from '../../services/courseService';
 import { Course } from '../../types/course';
 import LoadingScreen from '../../components/LoadingScreen';
-import { Edit, Trash2, Eye, Plus, Loader, Upload, Link as LinkIcon } from 'lucide-react';
+import { Edit, Trash2, Eye, Plus, Loader, Upload, Link as LinkIcon, FileText, Download } from 'lucide-react';
 import { storage } from '../../config/firebase';
 import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { getProxiedImageUrl } from '../../utils/imageUtils';
@@ -16,6 +16,8 @@ const Courses: React.FC = () => {
   const [deletingCourseId, setDeletingCourseId] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePreview, setImagePreview] = useState<string>('');
+  const [scheduleFile, setScheduleFile] = useState<File | null>(null);
+  const [scheduleName, setScheduleName] = useState<string>('');
   const [uploading, setUploading] = useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState<Partial<Course>>({
@@ -26,6 +28,7 @@ const Courses: React.FC = () => {
     duration: '',
     features: [''],
     paymentLink: '',
+    scheduleUrl: '',
   });
 
   const fetchCourses = async () => {
@@ -86,9 +89,12 @@ const Courses: React.FC = () => {
       duration: '',
       features: [''],
       paymentLink: '',
+      scheduleUrl: '',
     });
     setImageFile(null);
     setImagePreview('');
+    setScheduleFile(null);
+    setScheduleName('');
     setEditingCourse(null);
     setShowCreateModal(true);
   };
@@ -102,9 +108,12 @@ const Courses: React.FC = () => {
       duration: course.duration,
       features: [...course.features],
       paymentLink: course.paymentLink || '',
+      scheduleUrl: course.scheduleUrl || '',
     });
     setImageFile(null);
     setImagePreview(course.imageUrl);
+    setScheduleFile(null);
+    setScheduleName(course.scheduleUrl ? course.scheduleUrl.split('/').pop() || 'Course Schedule' : '');
     setEditingCourse(course);
     setShowCreateModal(true);
   };
@@ -125,17 +134,53 @@ const Courses: React.FC = () => {
     try {
       setUploading(true);
       console.log('Uploading image:', file.name);
-      const storageRef = ref(storage, `courses/${Date.now()}_${file.name}`);
+      
+      // Create a reference to the file location in Firebase Storage
+      const storageRef = ref(storage, `course-images/${Date.now()}_${file.name}`);
+      
+      // Upload the file
       const snapshot = await uploadBytes(storageRef, file);
-      console.log('Image uploaded successfully');
+      console.log('Uploaded image successfully');
+      
+      // Get the download URL
       const downloadURL = await getDownloadURL(snapshot.ref);
-      console.log('Download URL:', downloadURL);
+      console.log('Image download URL:', downloadURL);
+      
       return downloadURL;
     } catch (error) {
       console.error('Error uploading image:', error);
       throw error;
-    } finally {
-      setUploading(false);
+    }
+  };
+
+  const uploadSchedulePDF = async (file: File): Promise<string> => {
+    try {
+      setUploading(true);
+      console.log('Uploading schedule PDF:', file.name);
+      
+      // Create a reference to the file location in Firebase Storage
+      const storageRef = ref(storage, `course-schedules/${Date.now()}_${file.name}`);
+      
+      // Upload the file
+      const snapshot = await uploadBytes(storageRef, file);
+      console.log('Uploaded schedule PDF successfully');
+      
+      // Get the download URL
+      const downloadURL = await getDownloadURL(snapshot.ref);
+      console.log('Schedule PDF download URL:', downloadURL);
+      
+      return downloadURL;
+    } catch (error) {
+      console.error('Error uploading schedule PDF:', error);
+      throw error;
+    }
+  };
+
+  const handleScheduleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files && e.target.files[0];
+    if (file) {
+      setScheduleFile(file);
+      setScheduleName(file.name);
     }
   };
 
@@ -197,6 +242,7 @@ const Courses: React.FC = () => {
           duration: formData.duration || '',
           features: formData.features || [],
           paymentLink: formData.paymentLink || '',
+          scheduleUrl: formData.scheduleUrl || '',
         };
         
         const newCourse = await createCourse(courseData);
@@ -234,7 +280,8 @@ const Courses: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    e.stopPropagation(); // Stop any potential propagation
+    e.stopPropagation();
+    
     console.log('Form submitted, preventing default');
     
     if (loading || uploading) {
@@ -264,6 +311,20 @@ const Courses: React.FC = () => {
           return;
         }
       }
+
+      // If there's a new schedule file, upload it first
+      let scheduleUrl = formData.scheduleUrl;
+      if (scheduleFile) {
+        try {
+          console.log('Uploading new schedule PDF file...');
+          scheduleUrl = await uploadSchedulePDF(scheduleFile);
+        } catch (error) {
+          console.error('Failed to upload schedule PDF:', error);
+          alert('Failed to upload schedule PDF. Please try again.');
+          setLoading(false);
+          return;
+        }
+      }
       
       // Validate required fields
       if (!formData.title || !formData.description || (!imageUrl && !formData.imageUrl)) {
@@ -276,6 +337,7 @@ const Courses: React.FC = () => {
       const updatedFormData = {
         ...formData,
         imageUrl: imageUrl || formData.imageUrl,
+        scheduleUrl: scheduleUrl || formData.scheduleUrl,
       };
       
       console.log('Prepared form data:', updatedFormData);
@@ -376,8 +438,19 @@ const Courses: React.FC = () => {
                     </div>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <div className="text-lg font-semibold text-gray-900 mr-4">
-                      {formatPrice(course.price)}
+                    <div className="flex flex-col mr-4">
+                      <div className="text-lg font-semibold text-gray-900">{formatPrice(course.price)}</div>
+                      {course.scheduleUrl && (
+                        <a 
+                          href={course.scheduleUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:text-blue-800 flex items-center"
+                        >
+                          <FileText className="h-3 w-3 mr-1" />
+                          Schedule
+                        </a>
+                      )}
                     </div>
                     <button
                       onClick={() => handleOpenEditModal(course)}
@@ -572,6 +645,72 @@ const Courses: React.FC = () => {
                 <p className="mt-1 text-xs text-gray-500">
                   Enter a payment gateway link where students can pay for this course
                 </p>
+              </div>
+
+              <div>
+                <label className="block text-sm font-medium text-gray-700">
+                  Course Schedule PDF
+                </label>
+                <div className="mt-1 flex items-center space-x-4">
+                  <div className="flex-shrink-0 h-12 w-12 rounded-md overflow-hidden bg-gray-100 border border-gray-300 flex items-center justify-center">
+                    <FileText className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="flex-1">
+                    <div className="relative border border-gray-300 rounded-md shadow-sm py-2 px-3 focus-within:ring-1 focus-within:ring-blue-500 focus-within:border-blue-500">
+                      <label htmlFor="scheduleUpload" className="cursor-pointer flex items-center text-blue-600 hover:text-blue-500">
+                        <Upload className="h-5 w-5 mr-2" />
+                        <span>{uploading ? 'Uploading...' : 'Upload schedule PDF'}</span>
+                        <input
+                          id="scheduleUpload"
+                          name="scheduleUpload"
+                          type="file"
+                          accept="application/pdf"
+                          className="sr-only"
+                          onChange={handleScheduleChange}
+                          disabled={uploading}
+                        />
+                      </label>
+                    </div>
+                    {scheduleName && (
+                      <div className="mt-2 flex items-center text-sm text-gray-600">
+                        <FileText className="h-4 w-4 mr-1" />
+                        <span className="truncate">{scheduleName}</span>
+                      </div>
+                    )}
+                    {!scheduleFile && (
+                      <div className="mt-2">
+                        <label htmlFor="scheduleUrl" className="block text-sm font-medium text-gray-700">
+                          Or enter schedule PDF URL:
+                        </label>
+                        <input
+                          type="url"
+                          name="scheduleUrl"
+                          id="scheduleUrl"
+                          className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                          value={formData.scheduleUrl}
+                          onChange={handleInputChange}
+                          placeholder="https://example.com/course-schedule.pdf"
+                        />
+                      </div>
+                    )}
+                    {formData.scheduleUrl && !scheduleFile && (
+                      <div className="mt-2">
+                        <a 
+                          href={formData.scheduleUrl} 
+                          target="_blank" 
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
+                        >
+                          <Download className="h-4 w-4 mr-1" />
+                          View current schedule
+                        </a>
+                      </div>
+                    )}
+                    <p className="mt-1 text-xs text-gray-500">
+                      Upload a PDF file with the course schedule that students can download
+                    </p>
+                  </div>
+                </div>
               </div>
 
               <div>

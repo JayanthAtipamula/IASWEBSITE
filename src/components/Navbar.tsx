@@ -50,28 +50,86 @@ const Navbar = () => {
 
   const menuItems = [
     { title: 'Courses', href: '/courses' },
-    { title: 'Current Affairs', href: '/current-affairs' },
-    { title: 'Contact', href: '/#contact' },
-    { title: 'Quizzes', href: '/quizzes' },
+    { 
+      title: 'Current Affairs', 
+      href: '/current-affairs',
+      hasDropdown: true,
+      dropdownItems: [
+        { title: 'UPSC', href: '/current-affairs/upsc' },
+        { title: 'TGPSC', href: '/current-affairs/tgpsc' },
+        { title: 'APPSC', href: '/current-affairs/appsc' },
+      ]
+    },
   ];
   
   const dropdownItems = [
     {
       title: 'UPSC',
       items: [
-        { title: 'Notes', href: '/upsc-notes' }
+        { title: 'Syllabus', href: '/upsc-syllabus' },
+        { title: 'UPSC Notes', href: '/upsc-notes' },
+        { 
+          title: 'PYQs', 
+          href: '#', 
+          subItems: [
+            { title: 'Prelims', href: '/prelims-practice' },
+            { title: 'Mains', href: '/mains-pyqs' }
+          ]
+        },
+        {
+          title: 'Practice',
+          href: '#',
+          subItems: [
+            { title: 'Prelims', href: '/prelims-practice' },
+            { title: 'Mains', href: '/mains-practice' }
+          ]
+        }
       ]
     },
     {
       title: 'TGPSC',
       items: [
-        { title: 'Notes', href: '/tgpsc-notes' }
+        { title: 'Syllabus', href: '/tgpsc-syllabus' },
+        { title: 'TGPSC Notes', href: '/tgpsc-notes' },
+        { 
+          title: 'PYQs', 
+          href: '#', 
+          subItems: [
+            { title: 'Prelims', href: '/tgpsc-prelims-practice' },
+            { title: 'Mains', href: '/tgpsc-mains-pyqs' }
+          ]
+        },
+        {
+          title: 'Practice',
+          href: '#',
+          subItems: [
+            { title: 'Prelims', href: '/tgpsc-prelims-practice' },
+            { title: 'Mains', href: '/tgpsc-mains-practice' }
+          ]
+        }
       ]
     },
     {
       title: 'APPSC',
       items: [
-        { title: 'Notes', href: '/appsc-notes' }
+        { title: 'Syllabus', href: '/appsc-syllabus' },
+        { title: 'APPSC Notes', href: '/appsc-notes' },
+        { 
+          title: 'PYQs', 
+          href: '#', 
+          subItems: [
+            { title: 'Prelims', href: '/appsc-prelims-practice' },
+            { title: 'Mains', href: '/appsc-mains-pyqs' }
+          ]
+        },
+        {
+          title: 'Practice',
+          href: '#',
+          subItems: [
+            { title: 'Prelims', href: '/appsc-prelims-practice' },
+            { title: 'Mains', href: '/appsc-mains-practice' }
+          ]
+        }
       ]
     }
   ];
@@ -157,15 +215,31 @@ const Navbar = () => {
                 </button>
                 
                 {activeDropdown === dropdown.title && (
-                  <div className="absolute left-0 mt-2 w-40 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
                     {dropdown.items.map((item) => (
-                      <button
-                        key={item.title}
-                        onClick={() => handleNavigation(item.href)}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        {item.title}
-                      </button>
+                      <div key={item.title} className="relative group">
+                        <button
+                          onClick={() => item.subItems ? null : handleNavigation(item.href)}
+                          className="flex items-center justify-between w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          <span>{item.title}</span>
+                          {item.subItems && <ChevronDown className="w-3 h-3 ml-2" />}
+                        </button>
+                        
+                        {item.subItems && (
+                          <div className="absolute left-full top-0 w-40 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                            {item.subItems.map((subItem) => (
+                              <button
+                                key={subItem.title}
+                                onClick={() => handleNavigation(subItem.href)}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                {subItem.title}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     ))}
                   </div>
                 )}
@@ -174,15 +248,43 @@ const Navbar = () => {
             
             {/* Regular menu items */}
             {menuItems.map((item) => (
-              <button
-                key={item.title}
-                onClick={() => handleNavigation(item.href)}
-                className={`nav-link ${
-                  location.pathname === item.href ? 'text-blue-600' : ''
-                }`}
-              >
-                {item.title}
-              </button>
+              item.hasDropdown ? (
+                <div key={item.title} className="relative inline-block text-left">
+                  <button
+                    onClick={(e) => handleDropdownToggle(e, item.title)}
+                    className={`nav-link flex items-center ${location.pathname.includes(item.href) ? 'text-blue-600' : ''}`}
+                  >
+                    {item.title}
+                    <ChevronDown className="ml-1 h-4 w-4" />
+                  </button>
+                  
+                  {activeDropdown === item.title && (
+                    <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                      <div className="py-1" role="menu" aria-orientation="vertical">
+                        {item.dropdownItems?.map((dropdownItem) => (
+                          <Link
+                            key={dropdownItem.title}
+                            to={dropdownItem.href}
+                            className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                            role="menuitem"
+                            onClick={() => setActiveDropdown(null)}
+                          >
+                            {dropdownItem.title}
+                          </Link>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  key={item.title}
+                  onClick={() => handleNavigation(item.href)}
+                  className={`nav-link ${location.pathname === item.href ? 'text-blue-600' : ''}`}
+                >
+                  {item.title}
+                </button>
+              )
             ))}
 
             {/* Let's Talk Button */}
@@ -284,13 +386,29 @@ const Navbar = () => {
                     {activeDropdown === dropdown.title && (
                       <div className="pl-4 mt-1 space-y-1 border-l-2 border-gray-200">
                         {dropdown.items.map((item) => (
-                          <button
-                            key={item.title}
-                            onClick={() => handleNavigation(item.href)}
-                            className="block w-full text-left px-3 py-2 text-sm nav-link"
-                          >
-                            {item.title}
-                          </button>
+                          <div key={item.title}>
+                            <button
+                              onClick={() => item.subItems ? handleDropdownToggle(new MouseEvent('click') as any, item.title) : handleNavigation(item.href)}
+                              className="flex items-center justify-between w-full text-left px-3 py-2 text-sm nav-link"
+                            >
+                              <span>{item.title}</span>
+                              {item.subItems && <ChevronDown className="w-3 h-3" />}
+                            </button>
+                            
+                            {activeDropdown === item.title && item.subItems && (
+                              <div className="pl-4 mt-1 space-y-1 border-l-2 border-gray-200">
+                                {item.subItems.map((subItem) => (
+                                  <button
+                                    key={subItem.title}
+                                    onClick={() => handleNavigation(subItem.href)}
+                                    className="block w-full text-left px-3 py-2 text-xs nav-link"
+                                  >
+                                    {subItem.title}
+                                  </button>
+                                ))}
+                              </div>
+                            )}
+                          </div>
                         ))}
                       </div>
                     )}
@@ -299,15 +417,42 @@ const Navbar = () => {
                 
                 {/* Mobile regular menu items */}
                 {menuItems.map((item) => (
-                  <button
-                    key={item.title}
-                    onClick={() => handleNavigation(item.href)}
-                    className={`block w-full text-left px-3 py-2 rounded-md text-base nav-link ${
-                      location.pathname === item.href ? 'text-blue-600' : ''
-                    }`}
-                  >
-                    {item.title}
-                  </button>
+                  item.hasDropdown ? (
+                    <div key={item.title} className="w-full">
+                      <button
+                        onClick={(e) => handleDropdownToggle(e, item.title)}
+                        className={`flex items-center justify-between w-full text-left px-3 py-2 rounded-md text-base nav-link ${location.pathname.includes(item.href) ? 'text-blue-600' : ''}`}
+                      >
+                        {item.title}
+                        <ChevronDown className="ml-1 h-4 w-4" />
+                      </button>
+                      
+                      {activeDropdown === item.title && (
+                        <div className="pl-4 mt-1 space-y-1">
+                          {item.dropdownItems?.map((dropdownItem) => (
+                            <button
+                              key={dropdownItem.title}
+                              onClick={() => {
+                                handleNavigation(dropdownItem.href);
+                                setActiveDropdown(null);
+                              }}
+                              className="block w-full text-left px-3 py-2 text-sm nav-link"
+                            >
+                              {dropdownItem.title}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ) : (
+                    <button
+                      key={item.title}
+                      onClick={() => handleNavigation(item.href)}
+                      className={`block w-full text-left px-3 py-2 rounded-md text-base nav-link ${location.pathname === item.href ? 'text-blue-600' : ''}`}
+                    >
+                      {item.title}
+                    </button>
+                  )
                 ))}
 
                 {/* Let's Talk Button (Mobile) */}

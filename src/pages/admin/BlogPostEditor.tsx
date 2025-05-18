@@ -24,7 +24,8 @@ const BlogPostEditor: React.FC = () => {
     author: '',
     published: false,
     isCurrentAffair: false,
-    currentAffairDate: Date.now()
+    currentAffairDate: Date.now(),
+    examType: 'upsc'
   });
 
   useEffect(() => {
@@ -47,7 +48,8 @@ const BlogPostEditor: React.FC = () => {
               author: post.author,
               published: post.published,
               isCurrentAffair: post.isCurrentAffair || false,
-              currentAffairDate: post.currentAffairDate || Date.now()
+              currentAffairDate: post.currentAffairDate || Date.now(),
+              examType: post.examType || 'upsc'
             });
           }
         } else {
@@ -83,6 +85,10 @@ const BlogPostEditor: React.FC = () => {
     
     if (formData.isCurrentAffair && !formData.currentAffairDate) {
       return { isValid: false, error: 'Current affair date is required' };
+    }
+    
+    if (formData.isCurrentAffair && !formData.examType) {
+      return { isValid: false, error: 'Exam type is required for current affairs' };
     }
     
     if (!formData.isCurrentAffair && formData.categories.length === 0) {
@@ -262,20 +268,39 @@ const BlogPostEditor: React.FC = () => {
               </div>
 
               {formData.isCurrentAffair && (
-                <div>
-                  <label htmlFor="currentAffairDate" className="block text-sm font-medium text-gray-700">
-                    Current Affair Date
-                  </label>
-                  <input
-                    type="date"
-                    name="currentAffairDate"
-                    id="currentAffairDate"
-                    required={formData.isCurrentAffair}
-                    value={formData.currentAffairDate ? new Date(formData.currentAffairDate).toISOString().substring(0, 10) : ''}
-                    onChange={handleDateChange}
-                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
+                <>
+                  <div>
+                    <label htmlFor="currentAffairDate" className="block text-sm font-medium text-gray-700">
+                      Current Affair Date
+                    </label>
+                    <input
+                      type="date"
+                      name="currentAffairDate"
+                      id="currentAffairDate"
+                      required={formData.isCurrentAffair}
+                      value={formData.currentAffairDate ? new Date(formData.currentAffairDate).toISOString().substring(0, 10) : ''}
+                      onChange={handleDateChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                  </div>
+                  <div className="mt-4">
+                    <label htmlFor="examType" className="block text-sm font-medium text-gray-700">
+                      Exam Type
+                    </label>
+                    <select
+                      name="examType"
+                      id="examType"
+                      required={formData.isCurrentAffair}
+                      value={formData.examType || 'upsc'}
+                      onChange={handleChange}
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    >
+                      <option value="upsc">UPSC</option>
+                      <option value="tgpsc">TGPSC</option>
+                      <option value="appsc">APPSC</option>
+                    </select>
+                  </div>
+                </>
               )}
             </div>
 

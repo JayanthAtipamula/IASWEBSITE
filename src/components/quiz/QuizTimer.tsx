@@ -5,18 +5,21 @@ interface QuizTimerProps {
   totalSeconds: number;
   onTimeUp: () => void;
   onSubmit?: (timeSpent: number) => void;
+  disableTimer?: boolean;
 }
 
 const QuizTimer: React.FC<QuizTimerProps> = ({ 
   startTime, 
   totalSeconds, 
   onTimeUp,
-  onSubmit
+  onSubmit,
+  disableTimer
 }) => {
-  const [timeLeft, setTimeLeft] = useState(totalSeconds);
+  const [timeLeft, setTimeLeft] = useState(disableTimer ? 0 : totalSeconds);
   
   // Initialize timer on component mount
   useEffect(() => {
+    if (disableTimer) return;
     // Calculate elapsed time and update remaining time
     const elapsedSeconds = Math.floor((Date.now() - startTime) / 1000);
     const newRemainingSeconds = Math.max(0, totalSeconds - elapsedSeconds);
@@ -25,11 +28,14 @@ const QuizTimer: React.FC<QuizTimerProps> = ({
     if (newRemainingSeconds <= 0) {
       onTimeUp();
     }
-  }, [startTime, totalSeconds, onTimeUp]);
+  }, [startTime, totalSeconds, onTimeUp, disableTimer]);
   
   useEffect(() => {
+    if (disableTimer) {
+      return; // Timer is disabled, do nothing
+    }
     if (timeLeft <= 0) {
-      onTimeUp();
+      onTimeUp(); // Time is up and timer is active
       return;
     }
     
@@ -45,7 +51,7 @@ const QuizTimer: React.FC<QuizTimerProps> = ({
     }, 1000);
     
     return () => clearInterval(timer);
-  }, [timeLeft, onTimeUp]);
+  }, [timeLeft, onTimeUp, disableTimer]);
   
   // Format time as MM:SS
   const formatTime = (seconds: number): string => {
@@ -72,6 +78,15 @@ const QuizTimer: React.FC<QuizTimerProps> = ({
     }
   };
   
+  if (disableTimer) {
+    return (
+      <div className="bg-white shadow-sm rounded-lg p-6">
+        <h3 className="text-lg font-semibold text-gray-800 mb-4 text-center">Mains Practice Mode</h3>
+        <p className="text-sm text-gray-600 text-center">Timer is disabled for this quiz type. Take your time to review.</p>
+      </div>
+    );
+  }
+
   return (
     <div className="bg-white shadow-sm rounded-lg p-6">
       <h3 className="text-lg font-semibold text-gray-800 mb-4">Time Remaining</h3>

@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { X, Plus, Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Quiz, QuizQuestion } from '../../services/quizService';
+import { Quiz, QuizQuestion, QuizType, ExamBoard } from '../../services/quizService';
 
 interface QuizFormProps {
   initialData?: Partial<Quiz>;
@@ -20,8 +20,10 @@ const QuizForm: React.FC<QuizFormProps> = ({
   const [description, setDescription] = useState(initialData?.description || '');
   const [timeInMinutes, setTimeInMinutes] = useState(initialData?.timeInMinutes || 15);
   const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>(initialData?.difficulty || 'medium');
+  const [quizType, setQuizType] = useState<QuizType>(initialData?.quizType || 'prelimsPractice');
+  const [examBoard, setExamBoard] = useState<ExamBoard>(initialData?.examBoard || 'upsc');
   const [questions, setQuestions] = useState<Partial<QuizQuestion>[]>(
-    initialData?.questions || [{ id: '', question: '', options: ['', '', '', ''], correctAnswer: 0 }]
+    initialData?.questions || [{ id: '', question: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '' }]
   );
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -41,6 +43,10 @@ const QuizForm: React.FC<QuizFormProps> = ({
 
     if (timeInMinutes <= 0) {
       newErrors.timeInMinutes = 'Time must be greater than 0';
+    }
+
+    if (!examBoard) {
+      newErrors.examBoard = 'Exam board is required';
     }
 
     if (questions.length === 0) {
@@ -67,7 +73,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
   const handleAddQuestion = () => {
     setQuestions([
       ...questions,
-      { id: '', question: '', options: ['', '', '', ''], correctAnswer: 0 },
+      { id: '', question: '', options: ['', '', '', ''], correctAnswer: 0, explanation: '' },
     ]);
   };
 
@@ -109,6 +115,8 @@ const QuizForm: React.FC<QuizFormProps> = ({
       description,
       timeInMinutes,
       difficulty,
+      quizType,
+      examBoard,
       totalQuestions,
       questions: questions as QuizQuestion[],
     };
@@ -209,6 +217,40 @@ const QuizForm: React.FC<QuizFormProps> = ({
               </select>
             </div>
           </div>
+
+          <div className="sm:col-span-3">
+            <label htmlFor="quizType" className="block text-sm font-medium text-gray-700">
+              Quiz Type
+            </label>
+            <select
+              id="quizType"
+              value={quizType}
+              onChange={(e) => setQuizType(e.target.value as QuizType)}
+              className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+            >
+              <option value="prelimsPractice">Prelims Practice</option>
+              <option value="mainsPractice">Mains Practice</option>
+            </select>
+          </div>
+
+          <div className="sm:col-span-3">
+            <label htmlFor="examBoard" className="block text-sm font-medium text-gray-700">
+              Exam Board
+            </label>
+            <select
+              id="examBoard"
+              value={examBoard}
+              onChange={(e) => setExamBoard(e.target.value as ExamBoard)}
+              className={`mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 ${
+                errors.examBoard ? 'border-red-300' : ''
+              }`}
+            >
+              <option value="upsc">UPSC</option>
+              <option value="tgpsc">TGPSC</option>
+              <option value="appsc">APPSC</option>
+            </select>
+            {errors.examBoard && <p className="mt-1 text-sm text-red-600">{errors.examBoard}</p>}
+          </div>
         </div>
       </div>
 
@@ -295,6 +337,22 @@ const QuizForm: React.FC<QuizFormProps> = ({
                 <p className="mt-2 text-sm text-gray-500">
                   Select the radio button next to the correct answer.
                 </p>
+              </div>
+
+              <div>
+                <label
+                  htmlFor={`question-${questionIndex}-explanation`}
+                  className="block text-sm font-medium text-gray-700"
+                >
+                  Explanation (Optional)
+                </label>
+                <textarea
+                  id={`question-${questionIndex}-explanation`}
+                  value={question.explanation || ''}
+                  onChange={(e) => handleQuestionChange(questionIndex, 'explanation', e.target.value)}
+                  rows={3}
+                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                />
               </div>
             </div>
           </div>
