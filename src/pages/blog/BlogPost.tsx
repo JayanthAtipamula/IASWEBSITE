@@ -50,8 +50,13 @@ const updateMetaTags = (title: string, description: string, imageUrl?: string) =
   }
 };
 
-const BlogPost: React.FC = () => {
-  const { slug } = useParams<{ slug: string }>();
+interface BlogPostProps {
+  isCurrentAffair?: boolean;
+  examType?: 'upsc' | 'tgpsc' | 'appsc';
+}
+
+const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairProp, examType: examTypeProp }) => {
+  const { slug, dateParam } = useParams<{ slug: string; dateParam?: string }>();
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
   const [allPosts, setAllPosts] = useState<BlogPostType[]>([]);
@@ -63,31 +68,67 @@ const BlogPost: React.FC = () => {
     const fetchData = async () => {
       try {
         if (!slug) return;
-        const [postData, categoriesData, postsData, currentAffairsData] = await Promise.all([
-          getBlogPostBySlug(slug),
-          getCategories(),
-          getPublishedPosts(),
-          getCurrentAffairsPosts()
-        ]);
-        setPost(postData);
-        setCategories(categoriesData);
-        setAllPosts(postsData);
-        setCurrentAffairs(currentAffairsData);
         
-        // Initialize expanded state for the categories that the current post belongs to
-        if (postData && categoriesData) {
-          const initialExpandedState: Record<string, boolean> = {};
-          postData.categories.forEach(catId => {
-            initialExpandedState[catId] = true;
-          });
-          setExpandedCategories(initialExpandedState);
+        // If we're viewing a current affair with a specific exam type
+        if (isCurrentAffairProp && examTypeProp && dateParam) {
+          console.log(`Fetching current affair article: ${slug} for exam ${examTypeProp} on date ${dateParam}`);
           
-          // Update meta tags when post data is loaded
-          updateMetaTags(
-            postData.title,
-            postData.excerpt || 'Read this informative article from Epitome IAS',
-            postData.featuredImage
-          );
+          // For current affairs with dateParam, we can fetch directly using the slug
+          const [post, categoriesResult, currentAffairsData] = await Promise.all([
+            getBlogPostBySlug(slug),
+            getCategories(),
+            getCurrentAffairsPosts()
+          ]);
+          
+          if (post) {
+            setPost(post);
+            setCategories(categoriesResult);
+            setAllPosts([]);
+            setCurrentAffairs(currentAffairsData);
+            
+            // Initialize expanded state for the categories
+            const initialExpandedState: Record<string, boolean> = {};
+            post.categories.forEach((catId: string) => {
+              initialExpandedState[catId] = true;
+            });
+            setExpandedCategories(initialExpandedState);
+            
+            // Update meta tags
+            updateMetaTags(
+              post.title,
+              post.excerpt || 'Read this informative article from Epitome IAS',
+              post.featuredImage
+            );
+          }
+        } else {
+          // Regular blog post fetch
+          const [post, categoriesResult, postsData, currentAffairsData] = await Promise.all([
+            getBlogPostBySlug(slug),
+            getCategories(),
+            getPublishedPosts(),
+            getCurrentAffairsPosts()
+          ]);
+          
+          if (post) {
+            setPost(post);
+            setCategories(categoriesResult);
+            setAllPosts(postsData);
+            setCurrentAffairs(currentAffairsData);
+            
+            // Initialize expanded state for the categories
+            const initialExpandedState: Record<string, boolean> = {};
+            post.categories.forEach((catId: string) => {
+              initialExpandedState[catId] = true;
+            });
+            setExpandedCategories(initialExpandedState);
+            
+            // Update meta tags
+            updateMetaTags(
+              post.title,
+              post.excerpt || 'Read this informative article from Epitome IAS',
+              post.featuredImage
+            );
+          }
         }
       } catch (error) {
         console.error('Error fetching blog post:', error);
@@ -122,7 +163,7 @@ const BlogPost: React.FC = () => {
         ogDescription.setAttribute('content', 'Epitome IAS - Your learning partner for competitive exams.');
       }
     };
-  }, [slug]);
+  }, [slug, isCurrentAffairProp, examTypeProp, dateParam]);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => ({
@@ -161,7 +202,7 @@ const BlogPost: React.FC = () => {
     );
   }
 
-  const isCurrentAffair = post.isCurrentAffair;
+  const isCurrentAffair = isCurrentAffairProp || post?.isCurrentAffair || false;
   
   return (
     <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
@@ -175,7 +216,10 @@ const BlogPost: React.FC = () => {
                 {currentAffairs.map((affair) => (
                   <Link 
                     key={affair.id}
-                    to={`/notes/${affair.slug}`}
+                    to={affair.examType ? 
+                      `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
+                      `/notes/${affair.slug}`
+                    }
                     className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
                       affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
                     }`}
@@ -248,12 +292,15 @@ const BlogPost: React.FC = () => {
               </div>
             )}
             <div className="p-6 md:p-8 lg:p-10">
-              <Link
-                to={isCurrentAffair ? "/current-affairs" : "/notes"}
-                className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 mb-6"
-              >
-                ← Back to {isCurrentAffair ? "Current Affairs" : "Notes"}
-              </Link>
+              {isCurrentAffairProp && examTypeProp ? (
+                <Link to={`/current-affairs/${examTypeProp}`} className="text-blue-600 hover:text-blue-800">
+                  {examTypeProp.toUpperCase()} Current Affairs
+                </Link>
+              ) : (
+                <Link to="/notes" className="text-blue-600 hover:text-blue-800">
+                  Notes
+                </Link>
+              )}
               
               <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
               
@@ -325,7 +372,10 @@ const BlogPost: React.FC = () => {
                     {currentAffairs.map((affair) => (
                       <Link 
                         key={affair.id}
-                        to={`/notes/${affair.slug}`}
+                        to={affair.examType ? 
+                          `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
+                          `/notes/${affair.slug}`
+                        }
                         className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
                           affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
                         }`}

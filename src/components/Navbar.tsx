@@ -215,7 +215,7 @@ const Navbar = () => {
                 </button>
                 
                 {activeDropdown === dropdown.title && (
-                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-60">
                     {dropdown.items.map((item) => (
                       <div key={item.title} className="relative group">
                         <button
@@ -227,7 +227,7 @@ const Navbar = () => {
                         </button>
                         
                         {item.subItems && (
-                          <div className="absolute left-full top-0 w-40 bg-white rounded-md shadow-lg py-1 z-50 hidden group-hover:block">
+                          <div className="absolute left-full top-0 w-40 bg-white rounded-md shadow-lg py-1 z-60 hidden group-hover:block">
                             {item.subItems.map((subItem) => (
                               <button
                                 key={subItem.title}
@@ -259,7 +259,7 @@ const Navbar = () => {
                   </button>
                   
                   {activeDropdown === item.title && (
-                    <div className="absolute z-10 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
+                    <div className="absolute z-60 mt-2 w-48 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5">
                       <div className="py-1" role="menu" aria-orientation="vertical">
                         {item.dropdownItems?.map((dropdownItem) => (
                           <Link
@@ -319,7 +319,7 @@ const Navbar = () => {
                 </button>
                 
                 {userMenuOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1 z-60">
                     <button 
                       onClick={() => handleNavigation('/profile')}
                       className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"

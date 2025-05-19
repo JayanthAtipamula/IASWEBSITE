@@ -110,15 +110,50 @@ const BlogPostEditor: React.FC = () => {
     
     setSaving(true);
     console.log("Submitting form data:", formData);
+    console.log("isCurrentAffair:", formData.isCurrentAffair);
+    console.log("examType:", formData.examType);
+    console.log("currentAffairDate:", formData.currentAffairDate);
+    console.log("currentAffairDate as ISO string:", new Date(formData.currentAffairDate).toISOString());
+
+    // Ensure all fields are properly set for current affairs
+    let submissionData = { ...formData };
+
+    // Make sure isCurrentAffair is a boolean
+    submissionData.isCurrentAffair = Boolean(formData.isCurrentAffair);
+    
+    // If it's a current affair, ensure the date and examType are set
+    if (submissionData.isCurrentAffair) {
+      // Make sure currentAffairDate is a valid timestamp
+      if (!submissionData.currentAffairDate) {
+        submissionData.currentAffairDate = Date.now();
+      } else if (typeof submissionData.currentAffairDate === 'string') {
+        // Convert string date to timestamp if needed
+        submissionData.currentAffairDate = new Date(submissionData.currentAffairDate).getTime();
+      }
+      
+      // Make sure examType is set
+      if (!submissionData.examType) {
+        submissionData.examType = 'upsc'; // Default exam type
+      }
+      
+      console.log("Current affair date timestamp:", submissionData.currentAffairDate);
+      console.log("Exam type:", submissionData.examType);
+    } else {
+      // If not a current affair, explicitly set these fields to null/undefined
+      submissionData.currentAffairDate = undefined;
+      submissionData.examType = undefined;
+    }
+
+    console.log("Final submission data:", submissionData);
 
     try {
       if (id) {
         console.log("Updating existing post with ID:", id);
-        await updateBlogPost(id, formData);
+        await updateBlogPost(id, submissionData);
         console.log("Post updated successfully");
       } else {
         console.log("Creating new post");
-        const newId = await createBlogPost(formData);
+        const newId = await createBlogPost(submissionData);
         console.log("New post created with ID:", newId);
       }
       navigate('/admin/posts');

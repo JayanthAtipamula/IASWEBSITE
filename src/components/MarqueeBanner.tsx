@@ -16,7 +16,7 @@ const MarqueeBanner: React.FC = () => {
 
   return (
     <div 
-      className="fixed top-16 left-0 right-0 bg-blue-600 text-white font-semibold py-3 z-50 shadow-md"
+      className="fixed top-16 left-0 right-0 bg-blue-600 text-white font-semibold py-3 z-40 shadow-md"
       style={{ borderBottom: '2px solid #1e40af' }}
     >
       <div className="container mx-auto px-4 overflow-hidden">

@@ -118,7 +118,7 @@ const CurrentAffairsDetail: React.FC<CurrentAffairsDetailProps> = ({ examType, t
               <div className="p-6">
                 <p className="text-gray-600 mb-4">{post.excerpt}</p>
                 <Link 
-                  to={`/notes/${post.slug}`}
+                  to={`/current-affairs/${examType}/${post.currentAffairDate}/${post.slug}`}
                   className={`inline-flex items-center ${getTextColorClass()} hover:underline`}
                 >
                   Read Full Article

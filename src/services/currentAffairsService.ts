@@ -17,10 +17,12 @@ export type ExamType = 'upsc' | 'tgpsc' | 'appsc' | 'all';
  */
 export const getCurrentAffairsByExam = async (examType: ExamType): Promise<BlogPost[]> => {
   try {
+    console.log(`Fetching current affairs for exam type: ${examType}`);
     const postsRef = collection(db, 'posts');
     
     // If examType is 'all', don't filter by exam type
     const examFilter = examType === 'all' ? [] : [where('examType', '==', examType)];
+    console.log('Using exam filter:', examFilter);
     
     try {
       // First try with the full query with ordering
@@ -32,15 +34,24 @@ export const getCurrentAffairsByExam = async (examType: ExamType): Promise<BlogP
         orderBy('currentAffairDate', 'desc')
       );
       
+      console.log('Executing query with ordering...');
       const snapshot = await getDocs(q);
-      const posts = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+      console.log(`Query returned ${snapshot.docs.length} documents`);
+      
+      const posts = snapshot.docs.map(doc => {
+        const data = doc.data();
+        console.log(`Post ID: ${doc.id}, Title: ${data.title}, isCurrentAffair: ${data.isCurrentAffair}, examType: ${data.examType}, date: ${data.currentAffairDate}`);
+        return { id: doc.id, ...data } as BlogPost;
+      });
       
       // If we got posts, return them
       if (posts.length > 0) {
+        console.log(`Returning ${posts.length} posts with ordering`);
         return posts;
       }
       
       // If no posts found via index, try simpler query without ordering
+      console.log('No posts found with ordering query, trying simpler query...');
       const qSimple = query(
         postsRef,
         where('published', '==', true),
@@ -48,10 +59,18 @@ export const getCurrentAffairsByExam = async (examType: ExamType): Promise<BlogP
         ...examFilter
       );
       
+      console.log('Executing simpler query without ordering...');
       const snapshotSimple = await getDocs(qSimple);
-      const postsSimple = snapshotSimple.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+      console.log(`Simple query returned ${snapshotSimple.docs.length} documents`);
+      
+      const postsSimple = snapshotSimple.docs.map(doc => {
+        const data = doc.data();
+        console.log(`Simple query - Post ID: ${doc.id}, Title: ${data.title}, isCurrentAffair: ${data.isCurrentAffair}, examType: ${data.examType}, date: ${data.currentAffairDate}`);
+        return { id: doc.id, ...data } as BlogPost;
+      });
       
       if (postsSimple.length > 0) {
+        console.log(`Returning ${postsSimple.length} posts from simpler query`);
         // Sort manually if we got posts
         return postsSimple.sort((a, b) => {
           const dateA = a.currentAffairDate || 0;
@@ -59,6 +78,7 @@ export const getCurrentAffairsByExam = async (examType: ExamType): Promise<BlogP
           return dateB - dateA;
         });
       }
+      console.log('No posts found with simpler query either.');
     } catch (indexError) {
       console.error('Error with indexed query:', indexError);
       // Fall through to sample data

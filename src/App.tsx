@@ -26,7 +26,9 @@ import TGPSCCurrentAffairsPage from './pages/TGPSCCurrentAffairsPage';
 import APPSCCurrentAffairsPage from './pages/APPSCCurrentAffairsPage';
 import UPSCCurrentAffairsDetailPage from './pages/UPSCCurrentAffairsDetailPage';
 import TGPSCCurrentAffairsDetailPage from './pages/TGPSCCurrentAffairsDetailPage';
+import CurrentAffairsDebug from './pages/CurrentAffairsDebug';
 import APPSCCurrentAffairsDetailPage from './pages/APPSCCurrentAffairsDetailPage';
+import CurrentAffairsRawData from './pages/CurrentAffairsRawData';
 import FirebaseConnectionTest from './components/FirebaseConnectionTest';
 
 // Notes Pages
@@ -118,6 +120,11 @@ const App = () => {
           <Route path="/current-affairs/tgpsc/:dateParam" element={<TGPSCCurrentAffairsDetailPage />} />
           <Route path="/current-affairs/appsc/:dateParam" element={<APPSCCurrentAffairsDetailPage />} />
           
+          {/* Current Affairs Article Routes */}
+          <Route path="/current-affairs/upsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="upsc" />} />
+          <Route path="/current-affairs/tgpsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="tgpsc" />} />
+          <Route path="/current-affairs/appsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="appsc" />} />
+          
           {/* Notes Routes */}
           <Route path="/notes" element={<BlogIndex />} />
           <Route path="/notes/:slug" element={<BlogPost />} />
@@ -146,6 +153,10 @@ const App = () => {
             <Route path="messages" element={<Messages />} />
             <Route path="firebase-test" element={<FirebaseConnectionTest />} />
           </Route>
+          
+          {/* Debug Routes */}
+          <Route path="/current-affairs-debug" element={<CurrentAffairsDebug />} />
+          <Route path="/current-affairs-raw" element={<CurrentAffairsRawData />} />
           
           {/* Firebase Connection Test Route (for development) */}
           <Route path="/firebase-test" element={<FirebaseConnectionTest />} />
