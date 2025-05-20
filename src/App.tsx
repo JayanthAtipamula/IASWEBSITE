@@ -57,6 +57,9 @@ import CustomPages from './pages/admin/CustomPages';
 import CustomPageView from './pages/CustomPageView';
 import AdminCourses from './pages/admin/Courses';
 import Messages from './pages/admin/Messages';
+import TermsAndConditions from './pages/TermsAndConditions';
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import RefundPolicy from './pages/RefundPolicy';
 
 const App = () => {
   return (
@@ -160,6 +163,11 @@ const App = () => {
           
           {/* Firebase Connection Test Route (for development) */}
           <Route path="/firebase-test" element={<FirebaseConnectionTest />} />
+          
+          {/* Legal Pages */}
+          <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
+          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+          <Route path="/refund-policy" element={<RefundPolicy />} />
           
           {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
           <Route path="/:slug" element={<CustomPageView />} />

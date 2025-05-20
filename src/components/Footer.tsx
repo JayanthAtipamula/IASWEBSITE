@@ -80,20 +80,20 @@ const Footer = () => {
             </ul>
           </div>
 
-          {/* Newsletter */}
+          {/* Legal Pages */}
           <div>
-            <h3 className="text-lg font-semibold mb-4">Newsletter</h3>
-            <p className="text-gray-200 mb-4">Subscribe to get updates on new resources and exam tips.</p>
-            <form className="space-y-2">
-              <input
-                type="email"
-                placeholder="Enter your email"
-                className="w-full px-4 py-2 bg-white/10 text-white rounded-lg focus:outline-none focus:ring-2 focus:ring-[var(--primary-red)]"
-              />
-              <button type="submit" className="w-full btn-primary">
-                Subscribe
-              </button>
-            </form>
+            <h3 className="text-lg font-semibold mb-4">Legal</h3>
+            <ul className="space-y-2">
+              <li>
+                <a href="/terms-and-conditions" className="text-gray-200 hover:text-white transition-colors">Terms and Conditions</a>
+              </li>
+              <li>
+                <a href="/privacy-policy" className="text-gray-200 hover:text-white transition-colors">Privacy Policy</a>
+              </li>
+              <li>
+                <a href="/refund-policy" className="text-gray-200 hover:text-white transition-colors">Refund Policy</a>
+              </li>
+            </ul>
           </div>
         </div>
 
