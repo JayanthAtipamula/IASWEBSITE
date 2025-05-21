@@ -76,7 +76,7 @@ const Navbar = () => {
           href: '#', 
           subItems: [
             { title: 'Prelims', href: '/pyqs/prelims/upsc' },
-            { title: 'Mains', href: '/mains-pyqs' }
+            { title: 'Mains', href: '/upsc-mains-pyqs' }
           ]
         },
         {
