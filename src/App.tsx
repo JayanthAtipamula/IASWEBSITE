@@ -10,15 +10,13 @@ import Contact from './components/Contact';
 import Footer from './components/Footer';
 import QuizListPage from './pages/QuizListPage';
 import QuizPage from './pages/QuizPage';
-import MainsPYQPage from './pages/quiz/MainsPYQPage';
 import PrelimsPracticePage from './pages/quiz/PrelimsPracticePage';
 import MainsPracticePage from './pages/quiz/MainsPracticePage';
-import TGPSCMainsPYQPage from './pages/quiz/TGPSCMainsPYQPage';
 import TGPSCPrelimsPracticePage from './pages/quiz/TGPSCPrelimsPracticePage';
 import TGPSCMainsPracticePage from './pages/quiz/TGPSCMainsPracticePage';
-import APPSCMainsPYQPage from './pages/quiz/APPSCMainsPYQPage';
 import APPSCPrelimsPracticePage from './pages/quiz/APPSCPrelimsPracticePage';
 import APPSCMainsPracticePage from './pages/quiz/APPSCMainsPracticePage';
+import PYQSPrelimsPage from './pages/pyqs/PrelimsPage';
 import CoursesPage from './pages/CoursesPage';
 import CurrentAffairsPage from './pages/CurrentAffairsPage';
 import UPSCCurrentAffairsPage from './pages/UPSCCurrentAffairsPage';
@@ -55,8 +53,12 @@ import QuizAttempts from './pages/admin/QuizAttempts';
 import Banners from './pages/admin/Banners';
 import CustomPages from './pages/admin/CustomPages';
 import CustomPageView from './pages/CustomPageView';
+import PrelimsMCQs from './pages/admin/PrelimsMCQs';
+import MainsPYQs from './pages/admin/MainsPYQs';
+import MainsPage from './pages/pyqs/MainsPage';
 import AdminCourses from './pages/admin/Courses';
 import Messages from './pages/admin/Messages';
+import MarqueeItems from './pages/admin/MarqueeItems';
 import TermsAndConditions from './pages/TermsAndConditions';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import RefundPolicy from './pages/RefundPolicy';
@@ -96,18 +98,18 @@ const App = () => {
               <QuizPage />
             </ProtectedRoute>
           } />
-          {/* UPSC Quiz Routes */}
-          <Route path="/mains-pyqs" element={<MainsPYQPage />} />
+          
+          {/* PYQs Routes */}
+          <Route path="/pyqs/prelims/:examType" element={
+            <ProtectedRoute requireAdmin={false}>
+              <PYQSPrelimsPage />
+            </ProtectedRoute>
+          } />
+          {/* Quiz Practice Routes */}
           <Route path="/prelims-practice" element={<PrelimsPracticePage />} />
           <Route path="/mains-practice" element={<MainsPracticePage />} />
-          
-          {/* TGPSC Quiz Routes */}
-          <Route path="/tgpsc-mains-pyqs" element={<TGPSCMainsPYQPage />} />
           <Route path="/tgpsc-prelims-practice" element={<TGPSCPrelimsPracticePage />} />
           <Route path="/tgpsc-mains-practice" element={<TGPSCMainsPracticePage />} />
-          
-          {/* APPSC Quiz Routes */}
-          <Route path="/appsc-mains-pyqs" element={<APPSCMainsPYQPage />} />
           <Route path="/appsc-prelims-practice" element={<APPSCPrelimsPracticePage />} />
           <Route path="/appsc-mains-practice" element={<APPSCMainsPracticePage />} />
           
@@ -138,6 +140,12 @@ const App = () => {
           <Route path="/appsc-notes" element={<CustomPageView isExamPage="appsc" />} />
           <Route path="/tgpsc-notes" element={<CustomPageView isExamPage="tgpsc" />} />
           
+          {/* PYQs Routes */}
+          <Route path="/pyqs/prelims/:examType" element={<PYQSPrelimsPage />} />
+          <Route path="/pyqs/mains/:examType" element={<MainsPage />} />
+          
+
+          
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<ProtectedRoute><AdminLayout /></ProtectedRoute>}>
@@ -154,6 +162,9 @@ const App = () => {
             <Route path="quizzes/edit/:id" element={<QuizEditor />} />
             <Route path="quiz-attempts" element={<QuizAttempts />} />
             <Route path="messages" element={<Messages />} />
+            <Route path="prelims-mcqs" element={<PrelimsMCQs />} />
+            <Route path="mains-pyqs" element={<MainsPYQs />} />
+            <Route path="marquee-items" element={<MarqueeItems />} />
             <Route path="firebase-test" element={<FirebaseConnectionTest />} />
           </Route>
           
@@ -168,6 +179,11 @@ const App = () => {
           <Route path="/terms-and-conditions" element={<TermsAndConditions />} />
           <Route path="/privacy-policy" element={<PrivacyPolicy />} />
           <Route path="/refund-policy" element={<RefundPolicy />} />
+          
+          {/* Exam-specific PYQs Routes */}
+          <Route path="/upsc-mains-pyqs" element={<MainsPage examType="upsc" />} />
+          <Route path="/tgpsc-mains-pyqs" element={<MainsPage examType="tgpsc" />} />
+          <Route path="/appsc-mains-pyqs" element={<MainsPage examType="appsc" />} />
           
           {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
           <Route path="/:slug" element={<CustomPageView />} />

@@ -13,7 +13,10 @@ import {
   Image,
   FileEdit,
   GraduationCap,
-  MessageSquare
+  MessageSquare,
+  Type,
+  ClipboardCheck,
+  FileQuestion
 } from 'lucide-react';
 
 const AdminLayout = () => {
@@ -27,10 +30,13 @@ const AdminLayout = () => {
     { title: 'Categories', path: '/admin/categories', icon: <Tag className="w-5 h-5" /> },
     { title: 'Custom Pages', path: '/admin/custom-pages', icon: <FileEdit className="w-5 h-5" /> },
     { title: 'Banners', path: '/admin/banners', icon: <Image className="w-5 h-5" /> },
+    { title: 'Marquee Items', path: '/admin/marquee-items', icon: <Type className="w-5 h-5" /> },
     { title: 'Courses', path: '/admin/courses', icon: <GraduationCap className="w-5 h-5" /> },
     { title: 'Messages', path: '/admin/messages', icon: <MessageSquare className="w-5 h-5" /> },
     { title: 'Quizzes', path: '/admin/quizzes', icon: <BookOpen className="w-5 h-5" /> },
     { title: 'Quiz Attempts', path: '/admin/quiz-attempts', icon: <BarChart className="w-5 h-5" /> },
+    { title: 'Prelims MCQs', path: '/admin/prelims-mcqs', icon: <ClipboardCheck className="w-5 h-5" /> },
+    { title: 'Mains PYQs', path: '/admin/mains-pyqs', icon: <FileQuestion className="w-5 h-5" /> },
   ];
 
   const handleSignOut = async () => {

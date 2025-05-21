@@ -9,6 +9,9 @@ const Navbar = () => {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [pendingScroll, setPendingScroll] = useState<string | null>(null);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
+  const [activeSubMenu, setActiveSubMenu] = useState<string | null>(null);
+  // Track mobile menu dropdowns
+  const [mobileDropdowns, setMobileDropdowns] = useState<{[key: string]: boolean}>({});
   const location = useLocation();
   const navigate = useNavigate();
   const { user, isAdmin, signOut } = useAuth();
@@ -72,7 +75,7 @@ const Navbar = () => {
           title: 'PYQs', 
           href: '#', 
           subItems: [
-            { title: 'Prelims', href: '/prelims-practice' },
+            { title: 'Prelims', href: '/pyqs/prelims/upsc' },
             { title: 'Mains', href: '/mains-pyqs' }
           ]
         },
@@ -95,7 +98,7 @@ const Navbar = () => {
           title: 'PYQs', 
           href: '#', 
           subItems: [
-            { title: 'Prelims', href: '/tgpsc-prelims-practice' },
+            { title: 'Prelims', href: '/pyqs/prelims/tgpsc' },
             { title: 'Mains', href: '/tgpsc-mains-pyqs' }
           ]
         },
@@ -118,7 +121,7 @@ const Navbar = () => {
           title: 'PYQs', 
           href: '#', 
           subItems: [
-            { title: 'Prelims', href: '/appsc-prelims-practice' },
+            { title: 'Prelims', href: '/pyqs/prelims/appsc' },
             { title: 'Mains', href: '/appsc-mains-pyqs' }
           ]
         },
@@ -172,6 +175,20 @@ const Navbar = () => {
   const handleDropdownToggle = (e: React.MouseEvent, title: string) => {
     e.stopPropagation();
     setActiveDropdown(activeDropdown === title ? null : title);
+    setActiveSubMenu(null); // Reset submenu when toggling main dropdown
+  };
+
+  const handleSubMenuToggle = (e: React.MouseEvent, title: string) => {
+    e.stopPropagation();
+    setActiveSubMenu(activeSubMenu === title ? null : title);
+  };
+
+  // Toggle mobile dropdown visibility
+  const toggleMobileDropdown = (key: string) => {
+    setMobileDropdowns(prev => ({
+      ...prev,
+      [key]: !prev[key]
+    }));
   };
 
   const handleSignOut = async () => {
@@ -219,15 +236,31 @@ const Navbar = () => {
                     {dropdown.items.map((item) => (
                       <div key={item.title} className="relative group">
                         <button
-                          onClick={() => item.subItems ? null : handleNavigation(item.href)}
+                          onClick={(e) => item.subItems ? handleSubMenuToggle(e, `${dropdown.title}-${item.title}`) : handleNavigation(item.href)}
                           className="flex items-center justify-between w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         >
                           <span>{item.title}</span>
                           {item.subItems && <ChevronDown className="w-3 h-3 ml-2" />}
                         </button>
                         
+                        {/* Desktop view: Show on hover */}
                         {item.subItems && (
-                          <div className="absolute left-full top-0 w-40 bg-white rounded-md shadow-lg py-1 z-60 hidden group-hover:block">
+                          <div className="absolute left-full top-0 w-40 bg-white rounded-md shadow-lg py-1 z-60 hidden md:group-hover:block">
+                            {item.subItems.map((subItem) => (
+                              <button
+                                key={subItem.title}
+                                onClick={() => handleNavigation(subItem.href)}
+                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                              >
+                                {subItem.title}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Mobile/Tablet view: Show when activeSubMenu matches */}
+                        {item.subItems && activeSubMenu === `${dropdown.title}-${item.title}` && (
+                          <div className="md:hidden w-full bg-gray-50 py-1 pl-4 border-l-2 border-blue-500">
                             {item.subItems.map((subItem) => (
                               <button
                                 key={subItem.title}
@@ -376,37 +409,48 @@ const Navbar = () => {
                 {dropdownItems.map((dropdown) => (
                   <div key={dropdown.title} className="py-1">
                     <button
-                      onClick={(e) => handleDropdownToggle(e, dropdown.title)}
+                      onClick={() => toggleMobileDropdown(dropdown.title)}
                       className="flex items-center justify-between w-full text-left px-3 py-2 rounded-md text-base nav-link"
                     >
                       <span>{dropdown.title}</span>
-                      <ChevronDown className="w-4 h-4" />
+                      <ChevronDown className={`w-4 h-4 transition-transform ${mobileDropdowns[dropdown.title] ? 'rotate-180' : ''}`} />
                     </button>
                     
-                    {activeDropdown === dropdown.title && (
-                      <div className="pl-4 mt-1 space-y-1 border-l-2 border-gray-200">
+                    {mobileDropdowns[dropdown.title] && (
+                      <div className="pl-4 mt-1 space-y-1 border-l-2 border-blue-200">
                         {dropdown.items.map((item) => (
                           <div key={item.title}>
-                            <button
-                              onClick={() => item.subItems ? handleDropdownToggle(new MouseEvent('click') as any, item.title) : handleNavigation(item.href)}
-                              className="flex items-center justify-between w-full text-left px-3 py-2 text-sm nav-link"
-                            >
-                              <span>{item.title}</span>
-                              {item.subItems && <ChevronDown className="w-3 h-3" />}
-                            </button>
-                            
-                            {activeDropdown === item.title && item.subItems && (
-                              <div className="pl-4 mt-1 space-y-1 border-l-2 border-gray-200">
-                                {item.subItems.map((subItem) => (
-                                  <button
-                                    key={subItem.title}
-                                    onClick={() => handleNavigation(subItem.href)}
-                                    className="block w-full text-left px-3 py-2 text-xs nav-link"
-                                  >
-                                    {subItem.title}
-                                  </button>
-                                ))}
-                              </div>
+                            {item.subItems ? (
+                              <>
+                                <button
+                                  onClick={() => toggleMobileDropdown(`${dropdown.title}-${item.title}`)}
+                                  className="flex items-center justify-between w-full text-left px-3 py-2 text-sm nav-link"
+                                >
+                                  <span>{item.title}</span>
+                                  <ChevronDown className={`w-3 h-3 transition-transform ${mobileDropdowns[`${dropdown.title}-${item.title}`] ? 'rotate-180' : ''}`} />
+                                </button>
+                                
+                                {mobileDropdowns[`${dropdown.title}-${item.title}`] && (
+                                  <div className="pl-4 mt-1 space-y-1 border-l-2 border-blue-100">
+                                    {item.subItems.map((subItem) => (
+                                      <button
+                                        key={subItem.title}
+                                        onClick={() => handleNavigation(subItem.href)}
+                                        className="block w-full text-left px-3 py-2 text-xs nav-link"
+                                      >
+                                        {subItem.title}
+                                      </button>
+                                    ))}
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <button
+                                onClick={() => handleNavigation(item.href)}
+                                className="flex items-center w-full text-left px-3 py-2 text-sm nav-link"
+                              >
+                                <span>{item.title}</span>
+                              </button>
                             )}
                           </div>
                         ))}
