@@ -62,6 +62,8 @@ import MarqueeItems from './pages/admin/MarqueeItems';
 import TermsAndConditions from './pages/TermsAndConditions';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import RefundPolicy from './pages/RefundPolicy';
+import PaperSelectionPage from './pages/pyqs/PaperSelectionPage';
+import MainsPaperSelectionPage from './pages/pyqs/MainsPaperSelectionPage';
 
 const App = () => {
   return (
@@ -100,11 +102,11 @@ const App = () => {
           } />
           
           {/* PYQs Routes */}
-          <Route path="/pyqs/prelims/:examType" element={
-            <ProtectedRoute requireAdmin={false}>
-              <PYQSPrelimsPage />
-            </ProtectedRoute>
-          } />
+          <Route path="/pyqs/prelims/:examType" element={<PaperSelectionPage />} />
+          <Route path="/pyqs/prelims/:examType/paper/:paperId" element={<PYQSPrelimsPage />} />
+          <Route path="/pyqs/mains/:examType" element={<MainsPaperSelectionPage />} />
+          <Route path="/pyqs/mains/:examType/paper/:paperId" element={<MainsPage />} />
+          
           {/* Quiz Practice Routes */}
           <Route path="/prelims-practice" element={<PrelimsPracticePage />} />
           <Route path="/mains-practice" element={<MainsPracticePage />} />
@@ -139,12 +141,6 @@ const App = () => {
           <Route path="/upsc-notes" element={<CustomPageView isExamPage="upsc" />} />
           <Route path="/appsc-notes" element={<CustomPageView isExamPage="appsc" />} />
           <Route path="/tgpsc-notes" element={<CustomPageView isExamPage="tgpsc" />} />
-          
-          {/* PYQs Routes */}
-          <Route path="/pyqs/prelims/:examType" element={<PYQSPrelimsPage />} />
-          <Route path="/pyqs/mains/:examType" element={<MainsPage />} />
-          
-
           
           {/* Admin Routes */}
           <Route path="/admin/login" element={<AdminLogin />} />
@@ -181,9 +177,9 @@ const App = () => {
           <Route path="/refund-policy" element={<RefundPolicy />} />
           
           {/* Exam-specific PYQs Routes */}
-          <Route path="/upsc-mains-pyqs" element={<MainsPage examType="upsc" />} />
-          <Route path="/tgpsc-mains-pyqs" element={<MainsPage examType="tgpsc" />} />
-          <Route path="/appsc-mains-pyqs" element={<MainsPage examType="appsc" />} />
+          <Route path="/upsc-mains-pyqs" element={<Navigate to="/pyqs/mains/upsc" replace />} />
+          <Route path="/tgpsc-mains-pyqs" element={<Navigate to="/pyqs/mains/tgpsc" replace />} />
+          <Route path="/appsc-mains-pyqs" element={<Navigate to="/pyqs/mains/appsc" replace />} />
           
           {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
           <Route path="/:slug" element={<CustomPageView />} />

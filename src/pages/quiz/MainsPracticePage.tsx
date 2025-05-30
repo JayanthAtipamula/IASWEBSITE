@@ -1,19 +1,25 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { collection, query, where, getDocs } from 'firebase/firestore';
+import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { Quiz } from '../../services/quizService';
+import { Calendar } from 'lucide-react';
+
+interface QuizWithDate extends Omit<Quiz, 'createdAt'> {
+  createdAt: Date;
+}
 
 const MainsPracticePage: React.FC = () => {
-  const [quizzes, setQuizzes] = useState<Quiz[]>([]);
+  const [quizzes, setQuizzes] = useState<QuizWithDate[]>([]);
+  const [filteredQuizzes, setFilteredQuizzes] = useState<QuizWithDate[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
   const navigate = useNavigate();
 
   useEffect(() => {
     const fetchQuizzes = async () => {
       try {
-        // Query quizzes with quizType = 'mainsPractice' and examBoard = 'upsc'
         const q = query(
           collection(db, 'quizzes'),
           where('quizType', '==', 'mainsPractice'),
@@ -21,13 +27,20 @@ const MainsPracticePage: React.FC = () => {
         );
         
         const querySnapshot = await getDocs(q);
-        const quizData: Quiz[] = [];
+        const quizData: QuizWithDate[] = [];
         
         querySnapshot.forEach((doc) => {
-          quizData.push({ id: doc.id, ...doc.data() } as Quiz);
+          const data = doc.data();
+          const createdAt = data.createdAt instanceof Timestamp ? data.createdAt.toDate() : new Date();
+          quizData.push({ 
+            id: doc.id, 
+            ...data,
+            createdAt
+          } as QuizWithDate);
         });
         
         setQuizzes(quizData);
+        setFilteredQuizzes(quizData);
       } catch (err) {
         console.error('Error fetching quizzes:', err);
         setError('Failed to load quizzes. Please try again later.');
@@ -38,6 +51,33 @@ const MainsPracticePage: React.FC = () => {
 
     fetchQuizzes();
   }, []);
+
+  useEffect(() => {
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const weekAgo = new Date(today);
+    weekAgo.setDate(weekAgo.getDate() - 7);
+    const monthAgo = new Date(today);
+    monthAgo.setMonth(monthAgo.getMonth() - 1);
+
+    let filtered = [...quizzes];
+    
+    switch (dateFilter) {
+      case 'today':
+        filtered = quizzes.filter(quiz => quiz.createdAt >= today);
+        break;
+      case 'week':
+        filtered = quizzes.filter(quiz => quiz.createdAt >= weekAgo);
+        break;
+      case 'month':
+        filtered = quizzes.filter(quiz => quiz.createdAt >= monthAgo);
+        break;
+      default:
+        filtered = quizzes;
+    }
+    
+    setFilteredQuizzes(filtered);
+  }, [dateFilter, quizzes]);
 
   const handleQuizClick = (quizId: string) => {
     navigate(`/quiz/${quizId}`);
@@ -75,14 +115,69 @@ const MainsPracticePage: React.FC = () => {
             Practice with detailed explanations for UPSC Mains preparation
           </p>
         </div>
+
+        <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <h2 className="text-lg font-medium text-gray-900 flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-gray-500" />
+              Filter by date:
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={() => setDateFilter('all')}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  dateFilter === 'all'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                All Quizzes
+              </button>
+              <button
+                onClick={() => setDateFilter('today')}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  dateFilter === 'today'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                Today
+              </button>
+              <button
+                onClick={() => setDateFilter('week')}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  dateFilter === 'week'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                This Week
+              </button>
+              <button
+                onClick={() => setDateFilter('month')}
+                className={`px-4 py-2 rounded-full text-sm font-medium ${
+                  dateFilter === 'month'
+                    ? 'bg-blue-100 text-blue-700'
+                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+                }`}
+              >
+                This Month
+              </button>
+            </div>
+          </div>
+        </div>
         
-        {quizzes.length === 0 ? (
+        {filteredQuizzes.length === 0 ? (
           <div className="text-center py-12">
-            <p className="text-lg text-gray-600">No quizzes available at the moment. Please check back later.</p>
+            <p className="text-lg text-gray-600">
+              {dateFilter === 'all' 
+                ? 'No quizzes available at the moment. Please check back later.'
+                : `No quizzes found for the selected time period (${dateFilter}). Try a different filter or check back later.`}
+            </p>
           </div>
         ) : (
           <div className="grid gap-6 lg:grid-cols-3 md:grid-cols-2 sm:grid-cols-1">
-            {quizzes.map((quiz) => (
+            {filteredQuizzes.map((quiz) => (
               <div 
                 key={quiz.id} 
                 onClick={() => handleQuizClick(quiz.id)}
