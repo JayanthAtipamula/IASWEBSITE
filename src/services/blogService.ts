@@ -50,6 +50,25 @@ export const getPublishedPosts = async (): Promise<BlogPost[]> => {
   }
 };
 
+export const getPublishedBlogPosts = async (): Promise<BlogPost[]> => {
+  try {
+    const postsRef = collection(db, 'posts');
+    const q = query(
+      postsRef,
+      where('published', '==', true),
+      where('isBlog', '==', true),
+      orderBy('createdAt', 'desc')
+    );
+    const snapshot = await getDocs(q);
+    return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as BlogPost));
+  } catch (error) {
+    // If the query fails (e.g., due to missing index), fall back to client-side filtering
+    console.warn('Direct blog query failed, falling back to client-side filtering:', error);
+    const allPosts = await getPublishedPosts();
+    return allPosts.filter(post => post.isBlog === true);
+  }
+};
+
 export const getCurrentAffairsPosts = async (): Promise<BlogPost[]> => {
   try {
     const postsRef = collection(db, 'posts');
@@ -217,12 +236,21 @@ export const createBlogPost = async (data: BlogPostFormData): Promise<string> =>
       throw new Error('A post with this slug already exists');
     }
     
-    const post = {
-      ...data,
+    // Create clean post object without undefined values
+    const post: Record<string, any> = {
       slug,
       createdAt: now,
       updatedAt: now
     };
+    
+    // Copy only defined values from data
+    Object.entries(data).forEach(([key, value]) => {
+      if (value !== undefined && value !== null) {
+        post[key] = value;
+      }
+    });
+    
+    console.log('Creating post with data:', post);
     
     const docRef = await addDoc(postsRef, post);
     return docRef.id;
@@ -256,9 +284,9 @@ export const updateBlogPost = async (id: string, data: Partial<BlogPostFormData>
       updatedAt: Timestamp.now().toMillis()
     };
     
-    // Copy all defined fields from data to updates
+    // Copy only defined fields from data to updates
     Object.entries(data).forEach(([key, value]) => {
-      if (value !== undefined) {
+      if (value !== undefined && value !== null) {
         updates[key] = value;
       }
     });

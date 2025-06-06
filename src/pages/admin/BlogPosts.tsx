@@ -10,6 +10,7 @@ const BlogPosts: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<string>('all');
   const [showCurrentAffairs, setShowCurrentAffairs] = useState<boolean>(false);
+  const [showBlogs, setShowBlogs] = useState<boolean>(false);
 
   const fetchPosts = async () => {
     try {
@@ -34,20 +35,22 @@ const BlogPosts: React.FC = () => {
   useEffect(() => {
     let result = [...posts];
     
-    // First filter by current affairs if needed
+    // Filter by content type
     if (showCurrentAffairs) {
       result = result.filter(post => post.isCurrentAffair);
+      // Then filter by exam type if needed
+      if (filter !== 'all') {
+        result = result.filter(post => post.examType === filter);
+      }
+    } else if (showBlogs) {
+      result = result.filter(post => post.isBlog);
     } else {
-      result = result.filter(post => !post.isCurrentAffair);
-    }
-    
-    // Then filter by exam type if needed
-    if (showCurrentAffairs && filter !== 'all') {
-      result = result.filter(post => post.examType === filter);
+      // Show regular notes (neither current affairs nor blogs)
+      result = result.filter(post => !post.isCurrentAffair && !post.isBlog);
     }
     
     setFilteredPosts(result);
-  }, [posts, filter, showCurrentAffairs]);
+  }, [posts, filter, showCurrentAffairs, showBlogs]);
 
   const handleDelete = async (id: string) => {
     if (!window.confirm('Are you sure you want to delete this post?')) {
@@ -70,14 +73,14 @@ const BlogPosts: React.FC = () => {
     <div className="space-y-6">
       <div className="sm:flex sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">
-          {showCurrentAffairs ? 'Current Affairs' : 'Notes'}
+          {showCurrentAffairs ? 'Current Affairs' : showBlogs ? 'Blog Posts' : 'Notes'}
         </h1>
         <div className="mt-4 sm:mt-0">
           <Link
             to="/admin/posts/new"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
           >
-            Create New {showCurrentAffairs ? 'Current Affair' : 'Note'}
+            Create New {showCurrentAffairs ? 'Current Affair' : showBlogs ? 'Blog Post' : 'Note'}
           </Link>
         </div>
       </div>
@@ -87,19 +90,36 @@ const BlogPosts: React.FC = () => {
         <div className="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Content Type</label>
-            <div className="flex space-x-4">
+            <div className="flex space-x-2">
               <button
-                onClick={() => setShowCurrentAffairs(false)}
-                className={`px-3 py-1 text-sm rounded-md ${!showCurrentAffairs 
+                onClick={() => {
+                  setShowCurrentAffairs(false);
+                  setShowBlogs(false);
+                }}
+                className={`px-3 py-1 text-sm rounded-md ${!showCurrentAffairs && !showBlogs
                   ? 'bg-blue-100 text-blue-800 font-medium' 
                   : 'bg-gray-100 text-gray-800'}`}
               >
                 Notes
               </button>
               <button
-                onClick={() => setShowCurrentAffairs(true)}
-                className={`px-3 py-1 text-sm rounded-md ${showCurrentAffairs 
-                  ? 'bg-blue-100 text-blue-800 font-medium' 
+                onClick={() => {
+                  setShowCurrentAffairs(false);
+                  setShowBlogs(true);
+                }}
+                className={`px-3 py-1 text-sm rounded-md ${showBlogs
+                  ? 'bg-green-100 text-green-800 font-medium' 
+                  : 'bg-gray-100 text-gray-800'}`}
+              >
+                Blogs
+              </button>
+              <button
+                onClick={() => {
+                  setShowCurrentAffairs(true);
+                  setShowBlogs(false);
+                }}
+                className={`px-3 py-1 text-sm rounded-md ${showCurrentAffairs
+                  ? 'bg-orange-100 text-orange-800 font-medium' 
                   : 'bg-gray-100 text-gray-800'}`}
               >
                 Current Affairs
@@ -152,7 +172,7 @@ const BlogPosts: React.FC = () => {
       <div className="bg-white shadow overflow-hidden sm:rounded-md">
         {filteredPosts.length === 0 ? (
           <div className="p-6 text-center text-gray-500">
-            No {showCurrentAffairs ? 'current affairs' : 'notes'} found{showCurrentAffairs && filter !== 'all' ? ` for ${filter.toUpperCase()}` : ''}.
+            No {showCurrentAffairs ? 'current affairs' : showBlogs ? 'blog posts' : 'notes'} found{showCurrentAffairs && filter !== 'all' ? ` for ${filter.toUpperCase()}` : ''}.
           </div>
         ) : (
           <ul className="divide-y divide-gray-200">
@@ -181,6 +201,11 @@ const BlogPosts: React.FC = () => {
                               {post.examType.toUpperCase()}
                             </span>
                           )}
+                          {post.isBlog && (
+                            <span className="ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-green-100 text-green-800">
+                              BLOG
+                            </span>
+                          )}
                           <span className="ml-2">
                             {post.isCurrentAffair && post.currentAffairDate 
                               ? `Date: ${new Date(post.currentAffairDate).toLocaleDateString()}` 
@@ -204,7 +229,7 @@ const BlogPosts: React.FC = () => {
                       </button>
                       {post.published && (
                         <a
-                          href={`/notes/${post.slug}`}
+                          href={post.isBlog ? `/blogs/${post.slug}` : `/notes/${post.slug}`}
                           target="_blank"
                           rel="noopener noreferrer"
                           className="text-gray-600 hover:text-gray-900"

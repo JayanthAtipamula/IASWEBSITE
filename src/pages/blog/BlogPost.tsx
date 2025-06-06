@@ -52,10 +52,11 @@ const updateMetaTags = (title: string, description: string, imageUrl?: string) =
 
 interface BlogPostProps {
   isCurrentAffair?: boolean;
+  isBlog?: boolean;
   examType?: 'upsc' | 'tgpsc' | 'appsc';
 }
 
-const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairProp, examType: examTypeProp }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairProp, isBlog: isBlogProp, examType: examTypeProp }) => {
   const { slug, dateParam } = useParams<{ slug: string; dateParam?: string }>();
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -206,81 +207,83 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
   
   return (
     <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-      <div className="lg:flex lg:gap-8">
-        {/* Left Sidebar - Categories or Current Affairs */}
-        <div className="hidden lg:block lg:w-1/4">
-          {isCurrentAffair ? (
-            <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Affairs</h2>
-              <div className="space-y-2">
-                {currentAffairs.map((affair) => (
-                  <Link 
-                    key={affair.id}
-                    to={affair.examType ? 
-                      `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
-                      `/notes/${affair.slug}`
-                    }
-                    className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
-                      affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
-                    }`}
-                  >
-                    <div className="flex items-center text-sm text-gray-500 mb-1">
-                      <CalendarDays className="w-4 h-4 mr-1" />
-                      <span>{formatDate(affair.currentAffairDate)}</span>
-                    </div>
-                    <h3 className={`text-sm font-medium ${
-                      affair.id === post.id ? 'text-blue-600' : 'text-gray-800'
-                    }`}>
-                      {affair.title}
-                    </h3>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
-              <div className="space-y-2">
-                {categories.map((category) => (
-                  <div key={category.id} className="border-b border-gray-100 pb-2">
-                    <button
-                      onClick={() => toggleCategory(category.id)}
-                      className="flex items-center justify-between w-full text-left px-2 py-2 rounded-md hover:bg-gray-50"
+      <div className={`${(isBlogProp || post.isBlog) ? 'flex justify-center' : 'lg:flex lg:gap-8'}`}>
+        {/* Left Sidebar - Categories or Current Affairs - Only show for non-blog posts */}
+        {!(isBlogProp || post.isBlog) && (
+          <div className="hidden lg:block lg:w-1/4">
+            {isCurrentAffair ? (
+              <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Affairs</h2>
+                <div className="space-y-2">
+                  {currentAffairs.map((affair) => (
+                    <Link 
+                      key={affair.id}
+                      to={affair.examType ? 
+                        `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
+                        `/notes/${affair.slug}`
+                      }
+                      className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
+                        affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
+                      }`}
                     >
-                      <span className="font-medium text-gray-800">{category.name}</span>
-                      {expandedCategories[category.id] ? (
-                        <ChevronUp className="h-4 w-4 text-gray-500" />
-                      ) : (
-                        <ChevronDown className="h-4 w-4 text-gray-500" />
-                      )}
-                    </button>
-                    
-                    {expandedCategories[category.id] && (
-                      <div className="mt-1 ml-4 space-y-1">
-                        {getPostsByCategory(category.id).map((categoryPost) => (
-                          <Link
-                            key={categoryPost.id}
-                            to={`/notes/${categoryPost.slug}`}
-                            className={`block py-1 text-sm ${
-                              categoryPost.id === post.id
-                                ? 'text-blue-600 font-medium'
-                                : 'text-gray-600 hover:text-blue-600'
-                            }`}
-                          >
-                            {categoryPost.title}
-                          </Link>
-                        ))}
+                      <div className="flex items-center text-sm text-gray-500 mb-1">
+                        <CalendarDays className="w-4 h-4 mr-1" />
+                        <span>{formatDate(affair.currentAffairDate)}</span>
                       </div>
-                    )}
-                  </div>
-                ))}
+                      <h3 className={`text-sm font-medium ${
+                        affair.id === post.id ? 'text-blue-600' : 'text-gray-800'
+                      }`}>
+                        {affair.title}
+                      </h3>
+                    </Link>
+                  ))}
+                </div>
               </div>
-            </div>
-          )}
-        </div>
+            ) : (
+              <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
+                <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
+                <div className="space-y-2">
+                  {categories.map((category) => (
+                    <div key={category.id} className="border-b border-gray-100 pb-2">
+                      <button
+                        onClick={() => toggleCategory(category.id)}
+                        className="flex items-center justify-between w-full text-left px-2 py-2 rounded-md hover:bg-gray-50"
+                      >
+                        <span className="font-medium text-gray-800">{category.name}</span>
+                        {expandedCategories[category.id] ? (
+                          <ChevronUp className="h-4 w-4 text-gray-500" />
+                        ) : (
+                          <ChevronDown className="h-4 w-4 text-gray-500" />
+                        )}
+                      </button>
+                      
+                      {expandedCategories[category.id] && (
+                        <div className="mt-1 ml-4 space-y-1">
+                          {getPostsByCategory(category.id).map((categoryPost) => (
+                            <Link
+                              key={categoryPost.id}
+                              to={`/notes/${categoryPost.slug}`}
+                              className={`block py-1 text-sm ${
+                                categoryPost.id === post.id
+                                  ? 'text-blue-600 font-medium'
+                                  : 'text-gray-600 hover:text-blue-600'
+                              }`}
+                            >
+                              {categoryPost.title}
+                            </Link>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        )}
         
         {/* Main Content */}
-        <div className="lg:w-3/4">
+        <div className={`${(isBlogProp || post.isBlog) ? 'max-w-4xl w-full' : 'lg:w-3/4'}`}>
           <article className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200">
             {post.featuredImage && (
               <div className="aspect-w-16 aspect-h-9">
@@ -295,6 +298,10 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
               {isCurrentAffairProp && examTypeProp ? (
                 <Link to={`/current-affairs/${examTypeProp}`} className="text-blue-600 hover:text-blue-800">
                   {examTypeProp.toUpperCase()} Current Affairs
+                </Link>
+              ) : isBlogProp || post.isBlog ? (
+                <Link to="/blogs" className="text-blue-600 hover:text-blue-800">
+                  Blog
                 </Link>
               ) : (
                 <Link to="/notes" className="text-blue-600 hover:text-blue-800">
@@ -363,78 +370,80 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
           </article>
           
           {/* Mobile sidebar (visible only on mobile) */}
-          <div className="mt-8 lg:hidden">
-            <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-              {isCurrentAffair ? (
-                <>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Affairs</h2>
-                  <div className="space-y-3">
-                    {currentAffairs.map((affair) => (
-                      <Link 
-                        key={affair.id}
-                        to={affair.examType ? 
-                          `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
-                          `/notes/${affair.slug}`
-                        }
-                        className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
-                          affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
-                        }`}
-                      >
-                        <div className="flex items-center text-sm text-gray-500 mb-1">
-                          <CalendarDays className="w-4 h-4 mr-1" />
-                          <span>{formatDate(affair.currentAffairDate)}</span>
-                        </div>
-                        <h3 className={`text-sm font-medium ${
-                          affair.id === post.id ? 'text-blue-600' : 'text-gray-800'
-                        }`}>
-                          {affair.title}
-                        </h3>
-                      </Link>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
-                  <div className="space-y-2">
-                    {categories.map((category) => (
-                      <div key={category.id} className="border-b border-gray-100 pb-2">
-                        <button
-                          onClick={() => toggleCategory(category.id)}
-                          className="flex items-center justify-between w-full text-left px-2 py-2 rounded-md hover:bg-gray-50"
+          {!(isBlogProp || post.isBlog) && (
+            <div className="mt-8 lg:hidden">
+              <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
+                {isCurrentAffair ? (
+                  <>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Affairs</h2>
+                    <div className="space-y-3">
+                      {currentAffairs.map((affair) => (
+                        <Link 
+                          key={affair.id}
+                          to={affair.examType ? 
+                            `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
+                            `/notes/${affair.slug}`
+                          }
+                          className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
+                            affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
+                          }`}
                         >
-                          <span className="font-medium text-gray-800">{category.name}</span>
-                          {expandedCategories[category.id] ? (
-                            <ChevronUp className="h-4 w-4 text-gray-500" />
-                          ) : (
-                            <ChevronDown className="h-4 w-4 text-gray-500" />
-                          )}
-                        </button>
-                        
-                        {expandedCategories[category.id] && (
-                          <div className="mt-1 ml-4 space-y-1">
-                            {getPostsByCategory(category.id).map((categoryPost) => (
-                              <Link
-                                key={categoryPost.id}
-                                to={`/notes/${categoryPost.slug}`}
-                                className={`block py-1 text-sm ${
-                                  categoryPost.id === post.id
-                                    ? 'text-blue-600 font-medium'
-                                    : 'text-gray-600 hover:text-blue-600'
-                                }`}
-                              >
-                                {categoryPost.title}
-                              </Link>
-                            ))}
+                          <div className="flex items-center text-sm text-gray-500 mb-1">
+                            <CalendarDays className="w-4 h-4 mr-1" />
+                            <span>{formatDate(affair.currentAffairDate)}</span>
                           </div>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </>
-              )}
+                          <h3 className={`text-sm font-medium ${
+                            affair.id === post.id ? 'text-blue-600' : 'text-gray-800'
+                          }`}>
+                            {affair.title}
+                          </h3>
+                        </Link>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
+                    <div className="space-y-2">
+                      {categories.map((category) => (
+                        <div key={category.id} className="border-b border-gray-100 pb-2">
+                          <button
+                            onClick={() => toggleCategory(category.id)}
+                            className="flex items-center justify-between w-full text-left px-2 py-2 rounded-md hover:bg-gray-50"
+                          >
+                            <span className="font-medium text-gray-800">{category.name}</span>
+                            {expandedCategories[category.id] ? (
+                              <ChevronUp className="h-4 w-4 text-gray-500" />
+                            ) : (
+                              <ChevronDown className="h-4 w-4 text-gray-500" />
+                            )}
+                          </button>
+                          
+                          {expandedCategories[category.id] && (
+                            <div className="mt-1 ml-4 space-y-1">
+                              {getPostsByCategory(category.id).map((categoryPost) => (
+                                <Link
+                                  key={categoryPost.id}
+                                  to={`/notes/${categoryPost.slug}`}
+                                  className={`block py-1 text-sm ${
+                                    categoryPost.id === post.id
+                                      ? 'text-blue-600 font-medium'
+                                      : 'text-gray-600 hover:text-blue-600'
+                                  }`}
+                                >
+                                  {categoryPost.title}
+                                </Link>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

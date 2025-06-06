@@ -24,6 +24,7 @@ const BlogPostEditor: React.FC = () => {
     author: '',
     published: false,
     isCurrentAffair: false,
+    isBlog: false,
     currentAffairDate: Date.now(),
     examType: 'upsc'
   });
@@ -48,6 +49,7 @@ const BlogPostEditor: React.FC = () => {
               author: post.author,
               published: post.published,
               isCurrentAffair: post.isCurrentAffair || false,
+              isBlog: post.isBlog || false,
               currentAffairDate: post.currentAffairDate || Date.now(),
               examType: post.examType || 'upsc'
             });
@@ -91,8 +93,8 @@ const BlogPostEditor: React.FC = () => {
       return { isValid: false, error: 'Exam type is required for current affairs' };
     }
     
-    if (!formData.isCurrentAffair && formData.categories.length === 0) {
-      return { isValid: false, error: 'At least one category is required' };
+    if (!formData.isCurrentAffair && !formData.isBlog && formData.categories.length === 0) {
+      return { isValid: false, error: 'At least one category is required for regular posts' };
     }
     
     return { isValid: true };
@@ -111,37 +113,57 @@ const BlogPostEditor: React.FC = () => {
     setSaving(true);
     console.log("Submitting form data:", formData);
     console.log("isCurrentAffair:", formData.isCurrentAffair);
+    console.log("isBlog:", formData.isBlog);
     console.log("examType:", formData.examType);
     console.log("currentAffairDate:", formData.currentAffairDate);
-    console.log("currentAffairDate as ISO string:", new Date(formData.currentAffairDate).toISOString());
+    console.log("currentAffairDate as ISO string:", formData.currentAffairDate ? new Date(formData.currentAffairDate).toISOString() : 'No date set');
 
-    // Ensure all fields are properly set for current affairs
-    let submissionData = { ...formData };
+    // Create submission data by copying only the necessary fields
+    let submissionData: any = {
+      title: formData.title,
+      content: formData.content,
+      excerpt: formData.excerpt,
+      metaDescription: formData.metaDescription,
+      categories: formData.categories,
+      tags: formData.tags,
+      author: formData.author,
+      published: formData.published
+    };
 
-    // Make sure isCurrentAffair is a boolean
-    submissionData.isCurrentAffair = Boolean(formData.isCurrentAffair);
-    
-    // If it's a current affair, ensure the date and examType are set
-    if (submissionData.isCurrentAffair) {
+    // Add featuredImage only if it exists
+    if (formData.featuredImage) {
+      submissionData.featuredImage = formData.featuredImage;
+    }
+
+    // Handle current affairs specific fields
+    if (formData.isCurrentAffair) {
+      submissionData.isCurrentAffair = true;
+      
       // Make sure currentAffairDate is a valid timestamp
-      if (!submissionData.currentAffairDate) {
+      if (formData.currentAffairDate) {
+        submissionData.currentAffairDate = typeof formData.currentAffairDate === 'string' 
+          ? new Date(formData.currentAffairDate).getTime()
+          : formData.currentAffairDate;
+      } else {
         submissionData.currentAffairDate = Date.now();
-      } else if (typeof submissionData.currentAffairDate === 'string') {
-        // Convert string date to timestamp if needed
-        submissionData.currentAffairDate = new Date(submissionData.currentAffairDate).getTime();
       }
       
       // Make sure examType is set
-      if (!submissionData.examType) {
-        submissionData.examType = 'upsc'; // Default exam type
-      }
+      submissionData.examType = formData.examType || 'upsc';
       
       console.log("Current affair date timestamp:", submissionData.currentAffairDate);
       console.log("Exam type:", submissionData.examType);
     } else {
-      // If not a current affair, explicitly set these fields to null/undefined
-      submissionData.currentAffairDate = undefined;
-      submissionData.examType = undefined;
+      // For non-current affairs, explicitly set isCurrentAffair to false
+      submissionData.isCurrentAffair = false;
+      // Don't include currentAffairDate or examType fields at all
+    }
+
+    // Handle blog specific fields
+    if (formData.isBlog) {
+      submissionData.isBlog = true;
+    } else {
+      submissionData.isBlog = false;
     }
 
     console.log("Final submission data:", submissionData);
@@ -302,6 +324,20 @@ const BlogPostEditor: React.FC = () => {
                 </label>
               </div>
 
+              <div className="flex items-center space-x-2">
+                <input
+                  type="checkbox"
+                  name="isBlog"
+                  id="isBlog"
+                  checked={formData.isBlog}
+                  onChange={handleChange}
+                  className="h-4 w-4 text-green-600 focus:ring-green-500 border-gray-300 rounded"
+                />
+                <label htmlFor="isBlog" className="block text-sm font-medium text-gray-700">
+                  This is a Blog Post
+                </label>
+              </div>
+
               {formData.isCurrentAffair && (
                 <>
                   <div>
@@ -339,7 +375,7 @@ const BlogPostEditor: React.FC = () => {
               )}
             </div>
 
-            <div className={formData.isCurrentAffair ? 'hidden' : ''}>
+            <div className={formData.isCurrentAffair || formData.isBlog ? 'hidden' : ''}>
               <label htmlFor="categories" className="block text-sm font-medium text-gray-700">
                 Categories
               </label>

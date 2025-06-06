@@ -31,6 +31,7 @@ import FirebaseConnectionTest from './components/FirebaseConnectionTest';
 
 // Notes Pages
 import BlogIndex from './pages/blog/BlogIndex';
+import BlogsIndex from './pages/blog/BlogsIndex';
 import BlogPost from './pages/blog/BlogPost';
 import CategoryPage from './pages/blog/CategoryPage';
 
@@ -136,6 +137,10 @@ const App = () => {
           <Route path="/notes" element={<BlogIndex />} />
           <Route path="/notes/:slug" element={<BlogPost />} />
           <Route path="/category/:categorySlug" element={<CategoryPage />} />
+          
+          {/* Blog Routes */}
+          <Route path="/blogs" element={<BlogsIndex />} />
+          <Route path="/blogs/:slug" element={<BlogPost isBlog={true} />} />
           
           {/* Exam Specific Notes Routes */}
           <Route path="/upsc-notes" element={<CustomPageView isExamPage="upsc" />} />
