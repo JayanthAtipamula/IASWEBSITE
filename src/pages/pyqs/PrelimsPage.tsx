@@ -234,9 +234,10 @@ const PrelimsPage: React.FC = () => {
                       </div>
                       <div className="space-y-6">
                         <div className="bg-white p-6 rounded-lg border border-gray-200">
-                          <p className="text-lg text-gray-900 mb-4">
-                            {mcQuestions[currentQuestionIndex].question}
-                          </p>
+                          <div 
+                            className="text-lg text-gray-900 mb-4"
+                            dangerouslySetInnerHTML={{ __html: mcQuestions[currentQuestionIndex].question }}
+                          />
                           <div className="space-y-3">
                             {mcQuestions[currentQuestionIndex].options.map((option, index) => (
                               <div
@@ -293,9 +294,10 @@ const PrelimsPage: React.FC = () => {
                                   }`}>
                                     {isCorrect ? 'Correct!' : 'Incorrect'}
                                   </h4>
-                                  <p className="mt-2 text-sm text-gray-600">
-                                    {mcQuestions[currentQuestionIndex].explanation}
-                                  </p>
+                                  <div 
+                                    className="mt-2 text-sm text-gray-600"
+                                    dangerouslySetInnerHTML={{ __html: mcQuestions[currentQuestionIndex].explanation }}
+                                  />
                                 </div>
                               </div>
                             </div>

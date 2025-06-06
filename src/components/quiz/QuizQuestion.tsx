@@ -61,7 +61,10 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
       <div className="p-6">
         <div className="mb-6">
           <h3 className="text-xl font-semibold text-gray-800 mb-2">Question {questionNumber} of {totalQuestions}</h3>
-          <p className="text-lg text-gray-700">{question.question}</p>
+          <div 
+            className="text-lg text-gray-700"
+            dangerouslySetInnerHTML={{ __html: question.question }}
+          />
         </div>
         
         <div className="space-y-3">
@@ -94,7 +97,10 @@ const QuizQuestion: React.FC<QuizQuestionProps> = ({
         {shouldShowAnswer && question.explanation && (
           <div className="mt-6 pt-4 border-t border-gray-200">
             <h4 className="text-md font-semibold text-gray-800 mb-1">Explanation:</h4>
-            <p className="text-sm text-gray-600 whitespace-pre-wrap">{question.explanation}</p>
+            <div 
+              className="text-sm text-gray-600"
+              dangerouslySetInnerHTML={{ __html: question.explanation }}
+            />
           </div>
         )}
       </div>

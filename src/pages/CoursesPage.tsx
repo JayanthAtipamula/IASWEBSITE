@@ -8,6 +8,8 @@ import CourseImage from '../components/CourseImage';
 
 const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
+  const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
+  const [selectedExam, setSelectedExam] = useState<'all' | 'upsc' | 'tgpsc' | 'appsc'>('all');
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,6 +43,22 @@ const CoursesPage: React.FC = () => {
     fetchCourses();
   }, []);
 
+  // Filter courses when courses or selectedExam changes
+  useEffect(() => {
+    if (selectedExam === 'all') {
+      setFilteredCourses(courses);
+    } else {
+      const filtered = courses.filter(course => 
+        course.examType === selectedExam || course.examType === 'all'
+      );
+      setFilteredCourses(filtered);
+    }
+  }, [courses, selectedExam]);
+
+  const handleExamFilter = (exam: 'all' | 'upsc' | 'tgpsc' | 'appsc') => {
+    setSelectedExam(exam);
+  };
+
   // Format price to Indian Rupee format
   const formatPrice = (price: number): string => {
     return new Intl.NumberFormat('en-IN', {
@@ -69,65 +87,156 @@ const CoursesPage: React.FC = () => {
         </div>
       )}
 
+      {/* Exam Filter */}
+      <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <h2 className="text-lg font-medium text-gray-900">
+            Filter by Exam:
+          </h2>
+          <div className="flex flex-wrap gap-2">
+            <button
+              onClick={() => handleExamFilter('all')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedExam === 'all'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              All Courses
+            </button>
+            <button
+              onClick={() => handleExamFilter('upsc')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedExam === 'upsc'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              UPSC
+            </button>
+            <button
+              onClick={() => handleExamFilter('tgpsc')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedExam === 'tgpsc'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              TGPSC
+            </button>
+            <button
+              onClick={() => handleExamFilter('appsc')}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-colors ${
+                selectedExam === 'appsc'
+                  ? 'bg-blue-100 text-blue-700'
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
+              }`}
+            >
+              APPSC
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-        {courses.map((course) => (
+        {filteredCourses.map((course) => (
           <div 
             key={course.id} 
-            className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 hover:shadow-xl transition-shadow duration-300 flex flex-col"
+            className="group bg-white rounded-2xl shadow-lg overflow-hidden border border-gray-100 hover:shadow-2xl hover:border-blue-200 transition-all duration-500 flex flex-col transform hover:-translate-y-1"
           >
-            <div className="relative h-48 overflow-hidden">
+            <div className="relative h-56 overflow-hidden bg-gradient-to-br from-blue-50 to-indigo-100">
               <CourseImage 
                 imagePath={course.imageUrl} 
                 alt={course.title} 
-                className="w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+                className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
+              {/* Enhanced Exam Type Badge */}
+              <div className="absolute top-4 right-4">
+                <span className={`px-3 py-1.5 text-xs font-bold rounded-full shadow-md ${
+                  course.examType === 'upsc' ? 'bg-blue-500 text-white' :
+                  course.examType === 'tgpsc' ? 'bg-emerald-500 text-white' :
+                  course.examType === 'appsc' ? 'bg-purple-500 text-white' :
+                  'bg-gray-700 text-white'
+                }`}>
+                  {course.examType.toUpperCase()}
+                </span>
+              </div>
+              {/* Duration Badge */}
+              <div className="absolute bottom-4 left-4">
+                <div className="bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-full shadow-md">
+                  <div className="flex items-center text-sm font-medium text-gray-700">
+                    <Clock className="h-4 w-4 mr-1.5 text-blue-500" />
+                    <span>{course.duration}</span>
+                  </div>
+                </div>
+              </div>
             </div>
             
             <div className="p-6 flex flex-col flex-grow">
-              <div className="flex items-center text-sm text-gray-500 mb-2">
-                <Clock className="h-4 w-4 mr-1" />
-                <span>{course.duration}</span>
-              </div>
+              {/* Title with better typography */}
+              <h2 className="text-xl font-bold text-gray-900 mb-3 leading-tight group-hover:text-blue-600 transition-colors duration-300">
+                {course.title}
+              </h2>
               
-              <h2 className="text-xl font-bold text-gray-900 mb-2">{course.title}</h2>
+              {/* Description with better spacing */}
+              <p className="text-gray-600 mb-5 flex-grow leading-relaxed text-sm">
+                {course.description}
+              </p>
               
-              <p className="text-gray-600 mb-4 flex-grow">{course.description}</p>
-              
-              <div className="mb-4">
-                <h3 className="text-sm font-semibold text-gray-700 mb-2">What you'll learn:</h3>
-                <ul className="space-y-1">
+              {/* Enhanced Features Section */}
+              <div className="mb-6">
+                <h3 className="text-sm font-bold text-gray-800 mb-3 flex items-center">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full mr-2"></div>
+                  Key Features
+                </h3>
+                <ul className="space-y-2">
                   {course.features.slice(0, 3).map((feature, index) => (
-                    <li key={index} className="flex items-start">
-                      <Check className="h-4 w-4 text-green-500 mt-1 mr-2 flex-shrink-0" />
-                      <span className="text-sm text-gray-600">{feature}</span>
+                    <li key={index} className="flex items-start group/item">
+                      <div className="flex-shrink-0 w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mt-0.5 mr-3 group-hover/item:bg-green-200 transition-colors">
+                        <Check className="h-3 w-3 text-green-600" />
+                      </div>
+                      <span className="text-sm text-gray-700 leading-relaxed">{feature}</span>
                     </li>
                   ))}
                   {course.features.length > 3 && (
-                    <li className="text-sm text-blue-600 ml-6">+{course.features.length - 3} more features</li>
+                    <li className="text-xs text-blue-600 ml-8 font-medium">
+                      +{course.features.length - 3} more benefits
+                    </li>
                   )}
                 </ul>
               </div>
               
-              <div className="mt-auto">
-                <div className="text-2xl font-bold text-blue-600 mb-3">{formatPrice(course.price)}</div>
-                <div className="flex flex-wrap gap-2">
+              {/* Enhanced Footer Section */}
+              <div className="mt-auto border-t border-gray-100 pt-4">
+                {/* Price with better styling */}
+                <div className="flex items-center justify-between mb-4">
+                  <div className="text-2xl font-bold text-blue-600">
+                    {formatPrice(course.price)}
+                  </div>
+                  <div className="text-xs text-gray-500 bg-gray-50 px-2 py-1 rounded-full">
+                    One-time payment
+                  </div>
+                </div>
+                
+                {/* Enhanced Action Buttons */}
+                <div className="flex gap-3">
                   {course.scheduleUrl ? (
                     <a
                       href={course.scheduleUrl}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                      className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-3 px-4 rounded-xl inline-flex items-center justify-center transition-all duration-300 border border-gray-200 hover:border-gray-300 group/btn"
                     >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Schedule
+                      <FileText className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                      <span className="font-medium text-sm">Schedule</span>
                     </a>
                   ) : (
                     <button
-                      className="bg-gray-100 hover:bg-gray-200 text-gray-800 py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                      className="flex-1 bg-gray-50 hover:bg-gray-100 text-gray-700 py-3 px-4 rounded-xl inline-flex items-center justify-center transition-all duration-300 border border-gray-200 hover:border-gray-300 group/btn"
                       onClick={() => window.alert(`Schedule for ${course.title} will be available soon!`)}
                     >
-                      <FileText className="h-4 w-4 mr-2" />
-                      Schedule
+                      <FileText className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                      <span className="font-medium text-sm">Schedule</span>
                     </button>
                   )}
                   
@@ -136,18 +245,18 @@ const CoursesPage: React.FC = () => {
                       href={course.paymentLink}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl inline-flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg group/btn"
                     >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Payment
+                      <ShoppingCart className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                      <span className="font-bold text-sm">Enroll Now</span>
                     </a>
                   ) : (
                     <button
-                      className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-full inline-flex items-center transition-colors duration-300"
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-xl inline-flex items-center justify-center transition-all duration-300 shadow-md hover:shadow-lg group/btn"
                       onClick={() => window.alert(`Enrollment for ${course.title} will be available soon!`)}
                     >
-                      <ShoppingCart className="h-4 w-4 mr-2" />
-                      Payment
+                      <ShoppingCart className="h-4 w-4 mr-2 group-hover/btn:scale-110 transition-transform" />
+                      <span className="font-bold text-sm">Enroll Now</span>
                     </button>
                   )}
                 </div>
@@ -157,9 +266,14 @@ const CoursesPage: React.FC = () => {
         ))}
       </div>
 
-      {courses.length === 0 && (
+      {filteredCourses.length === 0 && (
         <div className="text-center py-12">
-          <p className="text-gray-500">No courses available at the moment. Please check back later.</p>
+          <p className="text-gray-500">
+            {selectedExam === 'all' 
+              ? 'No courses available at the moment. Please check back later.'
+              : `No courses available for ${selectedExam.toUpperCase()} at the moment.`
+            }
+          </p>
         </div>
       )}
     </div>

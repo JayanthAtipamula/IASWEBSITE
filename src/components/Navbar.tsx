@@ -53,6 +53,7 @@ const Navbar = () => {
 
   const menuItems = [
     { title: 'Courses', href: '/courses' },
+    { title: 'Blogs', href: '/notes' },
     { 
       title: 'Current Affairs', 
       href: '/current-affairs',

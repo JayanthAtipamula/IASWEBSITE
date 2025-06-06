@@ -261,8 +261,12 @@ const MainsPage: React.FC<MainsPageProps> = ({ examType: examTypeProp }) => {
                           {mainsQuestions.map((question, index) => (
                             <div key={question.id} className="border border-gray-200 rounded-lg p-6">
                               <h3 className="text-lg font-semibold mb-4">
-                                Q.{index + 1} {question.question}
+                                Q.{index + 1}
                               </h3>
+                              <div 
+                                className="text-gray-700 mb-4"
+                                dangerouslySetInnerHTML={{ __html: question.question }}
+                              />
                               
                               {question.category && question.category !== 'general' && (
                                 <div className="mb-4">

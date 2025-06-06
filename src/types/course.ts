@@ -6,6 +6,7 @@ export interface Course {
   price: number;
   duration: string;
   features: string[];
+  examType: 'upsc' | 'tgpsc' | 'appsc' | 'all';
   paymentLink?: string;
   scheduleUrl?: string;
   createdAt: number;

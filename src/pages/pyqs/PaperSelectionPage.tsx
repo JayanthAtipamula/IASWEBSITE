@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { db } from '../../config/firebase';
-import { BookOpen, Calendar } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 
 interface Chapter {
   id: string;
@@ -25,10 +25,8 @@ const PaperSelectionPage: React.FC = () => {
   const { examType = 'upsc' } = useParams<{ examType?: string }>();
   const navigate = useNavigate();
   const [papers, setPapers] = useState<Paper[]>([]);
-  const [filteredPapers, setFilteredPapers] = useState<Paper[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month'>('all');
 
   useEffect(() => {
     const fetchPapers = async () => {
@@ -59,7 +57,6 @@ const PaperSelectionPage: React.FC = () => {
         // Sort papers by year in descending order
         papersData.sort((a, b) => b.year - a.year);
         setPapers(papersData);
-        setFilteredPapers(papersData);
         
       } catch (err) {
         console.error('Error fetching papers:', err);
@@ -71,42 +68,6 @@ const PaperSelectionPage: React.FC = () => {
 
     fetchPapers();
   }, [examType]);
-
-  useEffect(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const monthAgo = new Date(today);
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
-
-    let filtered = [...papers];
-    
-    switch (dateFilter) {
-      case 'today':
-        filtered = papers.filter(paper => {
-          const paperDate = new Date(paper.createdAt);
-          return paperDate >= today;
-        });
-        break;
-      case 'week':
-        filtered = papers.filter(paper => {
-          const paperDate = new Date(paper.createdAt);
-          return paperDate >= weekAgo;
-        });
-        break;
-      case 'month':
-        filtered = papers.filter(paper => {
-          const paperDate = new Date(paper.createdAt);
-          return paperDate >= monthAgo;
-        });
-        break;
-      default:
-        filtered = papers;
-    }
-    
-    setFilteredPapers(filtered);
-  }, [dateFilter, papers]);
 
   const handlePaperClick = (paper: Paper) => {
     navigate(`/pyqs/prelims/${examType}/paper/${paper.id}`);
@@ -166,59 +127,8 @@ const PaperSelectionPage: React.FC = () => {
           </p>
         </div>
 
-        <div className="mb-8 bg-white p-4 rounded-lg shadow-sm border border-gray-200">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h2 className="text-lg font-medium text-gray-900 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-gray-500" />
-              Filter by date:
-            </h2>
-            <div className="flex flex-wrap gap-2">
-              <button
-                onClick={() => setDateFilter('all')}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  dateFilter === 'all'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                All Papers
-              </button>
-              <button
-                onClick={() => setDateFilter('today')}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  dateFilter === 'today'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setDateFilter('week')}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  dateFilter === 'week'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                This Week
-              </button>
-              <button
-                onClick={() => setDateFilter('month')}
-                className={`px-4 py-2 rounded-full text-sm font-medium ${
-                  dateFilter === 'month'
-                    ? 'bg-blue-100 text-blue-700'
-                    : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
-              >
-                This Month
-              </button>
-            </div>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPapers.map((paper) => (
+          {papers.map((paper) => (
             <div
               key={paper.id}
               onClick={() => handlePaperClick(paper)}

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Quiz, QuizQuestion, QuizType, ExamBoard } from '../../services/quizService';
+import RichTextEditor from '../RichTextEditor';
 
 interface QuizFormProps {
   initialData?: Partial<Quiz>;
@@ -346,12 +347,11 @@ const QuizForm: React.FC<QuizFormProps> = ({
                 >
                   Explanation (Optional)
                 </label>
-                <textarea
-                  id={`question-${questionIndex}-explanation`}
+                <RichTextEditor
                   value={question.explanation || ''}
-                  onChange={(e) => handleQuestionChange(questionIndex, 'explanation', e.target.value)}
+                  onChange={(value) => handleQuestionChange(questionIndex, 'explanation', value)}
+                  placeholder="Enter explanation for this question..."
                   rows={3}
-                  className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
                 />
               </div>
             </div>

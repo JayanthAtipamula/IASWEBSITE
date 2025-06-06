@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, addDoc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { BookOpen, Edit, Trash, ChevronDown, ChevronUp, FilePlus, FolderPlus } from 'lucide-react';
+import RichTextEditor from '../../components/RichTextEditor';
 
 interface Chapter {
   id: string;
@@ -760,12 +761,11 @@ const MainsPYQs: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Question
                         </label>
-                        <textarea
+                        <RichTextEditor
                           value={currentQuestion.question}
-                          onChange={(e) => handleQuestionChange('question', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(value) => handleQuestionChange('question', value)}
+                          placeholder="Enter the question..."
                           rows={3}
-                          required
                         />
                       </div>
                       
@@ -773,12 +773,11 @@ const MainsPYQs: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Answer
                         </label>
-                        <textarea
+                        <RichTextEditor
                           value={currentQuestion.answer}
-                          onChange={(e) => handleQuestionChange('answer', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(value) => handleQuestionChange('answer', value)}
+                          placeholder="Enter the answer..."
                           rows={10}
-                          required
                         />
                       </div>
                       
@@ -904,10 +903,16 @@ const MainsPYQs: React.FC = () => {
                             </button>
                           </div>
                         </div>
-                        <p className="mb-3">{question.question}</p>
-                        <div className="mt-2 p-3 bg-gray-50 rounded-md">
-                          <h4 className="text-sm font-medium text-gray-700 mb-1">Answer:</h4>
-                          <p className="text-sm whitespace-pre-line">{question.answer}</p>
+                        <div 
+                          className="mb-3"
+                          dangerouslySetInnerHTML={{ __html: question.question }}
+                        />
+                        <div className="mt-3 p-3 bg-gray-50 rounded-md">
+                          <h4 className="text-sm font-medium text-gray-800 mb-1">Answer:</h4>
+                          <div 
+                            className="text-sm text-gray-700 whitespace-pre-wrap"
+                            dangerouslySetInnerHTML={{ __html: question.answer }}
+                          />
                         </div>
                         {question.tags && question.tags.length > 0 && (
                           <div className="mt-3">

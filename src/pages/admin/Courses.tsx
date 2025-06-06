@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { getCourses, getSampleCourses, createCourse, updateCourse, deleteCourse } from '../../services/courseService';
+import { getCourses, getSampleCourses, createCourse, updateCourse, deleteCourse, migrateCourseExamTypes } from '../../services/courseService';
 import { Course } from '../../types/course';
 import LoadingScreen from '../../components/LoadingScreen';
 import { Edit, Trash2, Eye, Plus, Loader, Upload, Link as LinkIcon, FileText, Download } from 'lucide-react';
@@ -19,6 +19,8 @@ const Courses: React.FC = () => {
   const [scheduleFile, setScheduleFile] = useState<File | null>(null);
   const [scheduleName, setScheduleName] = useState<string>('');
   const [uploading, setUploading] = useState(false);
+  const [migrationCompleted, setMigrationCompleted] = useState(false);
+  const [usingSampleData, setUsingSampleData] = useState(false);
   const formRef = React.useRef<HTMLFormElement>(null);
   const [formData, setFormData] = useState<Partial<Course>>({
     title: '',
@@ -26,6 +28,7 @@ const Courses: React.FC = () => {
     imageUrl: '',
     price: 0,
     duration: '',
+    examType: 'upsc',
     features: [''],
     paymentLink: '',
     scheduleUrl: '',
@@ -34,17 +37,32 @@ const Courses: React.FC = () => {
   const fetchCourses = async () => {
     try {
       setLoading(true);
+      
+      // Run migration only once
+      if (!migrationCompleted) {
+        try {
+          await migrateCourseExamTypes();
+          setMigrationCompleted(true);
+          localStorage.setItem('coursesMigrationCompleted', 'true');
+        } catch (error) {
+          console.warn('Migration failed, continuing with fetch:', error);
+        }
+      }
+      
       const data = await getCourses();
       if (data.length === 0) {
         console.log('No courses found in Firestore, using sample data');
         setCourses(getSampleCourses());
+        setUsingSampleData(true);
       } else {
         console.log(`Found ${data.length} courses`);
         setCourses(data);
+        setUsingSampleData(false);
       }
     } catch (error) {
       console.error('Error fetching courses:', error);
       setCourses(getSampleCourses());
+      setUsingSampleData(true);
     } finally {
       setTimeout(() => {
         setLoading(false);
@@ -53,6 +71,10 @@ const Courses: React.FC = () => {
   };
 
   useEffect(() => {
+    // Check if migration was already completed
+    const migrationDone = localStorage.getItem('coursesMigrationCompleted') === 'true';
+    setMigrationCompleted(migrationDone);
+    
     fetchCourses();
 
     // Add event listener to prevent unintended form submissions
@@ -87,6 +109,7 @@ const Courses: React.FC = () => {
       imageUrl: '',
       price: 0,
       duration: '',
+      examType: 'upsc',
       features: [''],
       paymentLink: '',
       scheduleUrl: '',
@@ -99,13 +122,25 @@ const Courses: React.FC = () => {
     setShowCreateModal(true);
   };
 
+  // Helper function to check if an ID is numeric (sample data)
+  const isNumericId = (id: string): boolean => {
+    return /^\d+$/.test(id);
+  };
+
   const handleOpenEditModal = (course: Course) => {
+    // Prevent editing sample courses
+    if (usingSampleData || isNumericId(course.id)) {
+      alert(`Cannot edit sample course "${course.title}". This is demo data.\n\nTo edit courses:\n1. Set up your Firebase configuration properly\n2. Create new courses which will be saved to your database\n3. Then you can edit your real courses`);
+      return;
+    }
+
     setFormData({
       title: course.title,
       description: course.description,
       imageUrl: course.imageUrl,
       price: course.price,
       duration: course.duration,
+      examType: course.examType || 'upsc',
       features: [...course.features],
       paymentLink: course.paymentLink || '',
       scheduleUrl: course.scheduleUrl || '',
@@ -184,7 +219,7 @@ const Courses: React.FC = () => {
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData({ ...formData, [name]: value });
   };
@@ -212,49 +247,59 @@ const Courses: React.FC = () => {
 
   const handleFormSubmission = async (formData: Partial<Course>, isEditing: boolean): Promise<boolean> => {
     try {
-      const now = Date.now();
+      console.log('handleFormSubmission called with:', { formData, isEditing });
       
-      // Add a small delay to ensure any pending operations complete
-      await new Promise(resolve => setTimeout(resolve, 100));
-      
+      const courseData: Omit<Course, 'id' | 'createdAt' | 'updatedAt'> = {
+        title: formData.title!,
+        description: formData.description!,
+        imageUrl: formData.imageUrl!,
+        price: formData.price!,
+        duration: formData.duration!,
+        examType: formData.examType!,
+        features: formData.features!,
+        paymentLink: formData.paymentLink,
+        scheduleUrl: formData.scheduleUrl,
+      };
+
+      console.log('Prepared courseData:', courseData);
+
       if (isEditing && editingCourse) {
-        // Update existing course in Firestore
-        console.log(`Updating course ${editingCourse.id}`);
-        await updateCourse(editingCourse.id, formData);
-        
-        // Update local state
-        const updatedCourse = {
-          ...editingCourse,
-          ...formData,
-          updatedAt: now,
-        } as Course;
-        
-        setCourses(courses.map(c => c.id === editingCourse.id ? updatedCourse : c));
-        return true;
+        console.log('Updating existing course:', editingCourse.id);
+        await updateCourse(editingCourse.id, courseData);
+        console.log('Course updated successfully');
       } else {
-        // Create new course in Firestore
         console.log('Creating new course...');
-        const courseData = {
-          title: formData.title || '',
-          description: formData.description || '',
-          imageUrl: formData.imageUrl || '',
-          price: formData.price || 0,
-          duration: formData.duration || '',
-          features: formData.features || [],
-          paymentLink: formData.paymentLink || '',
-          scheduleUrl: formData.scheduleUrl || '',
-        };
-        
         const newCourse = await createCourse(courseData);
         console.log('Course created successfully:', newCourse);
-        
-        // Add to local state
-        setCourses([newCourse, ...courses]);
-        return true;
       }
+
+      // Refresh the courses list
+      console.log('Refreshing courses list...');
+      await fetchCourses();
+      console.log('Courses list refreshed');
+      
+      console.log(`Course ${isEditing ? 'updated' : 'created'} successfully`);
+      return true;
     } catch (error) {
-      console.error('Error in form submission:', error);
-      return false;
+      console.error('Error in handleFormSubmission - Full details:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error');
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+      
+      // Log the exact courseData that failed
+      console.error('Failed courseData:', {
+        title: formData.title,
+        description: formData.description,
+        imageUrl: formData.imageUrl,
+        price: formData.price,
+        duration: formData.duration,
+        examType: formData.examType,
+        features: formData.features,
+        paymentLink: formData.paymentLink,
+        scheduleUrl: formData.scheduleUrl,
+      });
+      
+      throw error;
     }
   };
 
@@ -306,7 +351,7 @@ const Courses: React.FC = () => {
           imageUrl = await uploadImage(imageFile);
         } catch (error) {
           console.error('Failed to upload image:', error);
-          alert('Failed to upload image. Please try again.');
+          alert(`Failed to upload image: ${error instanceof Error ? error.message : 'Unknown error'}`);
           setLoading(false);
           return;
         }
@@ -320,7 +365,7 @@ const Courses: React.FC = () => {
           scheduleUrl = await uploadSchedulePDF(scheduleFile);
         } catch (error) {
           console.error('Failed to upload schedule PDF:', error);
-          alert('Failed to upload schedule PDF. Please try again.');
+          alert(`Failed to upload schedule PDF: ${error instanceof Error ? error.message : 'Unknown error'}`);
           setLoading(false);
           return;
         }
@@ -338,6 +383,7 @@ const Courses: React.FC = () => {
         ...formData,
         imageUrl: imageUrl || formData.imageUrl,
         scheduleUrl: scheduleUrl || formData.scheduleUrl,
+        examType: formData.examType || 'upsc',
       };
       
       console.log('Prepared form data:', updatedFormData);
@@ -366,14 +412,31 @@ const Courses: React.FC = () => {
         }
       }
     } catch (error) {
-      console.error('Error submitting course:', error);
-      alert('An error occurred while saving the course. Please try again.');
+      console.error('Error submitting course - Full error details:', error);
+      console.error('Error type:', typeof error);
+      console.error('Error constructor:', error?.constructor?.name);
+      
+      if (error instanceof Error) {
+        console.error('Error message:', error.message);
+        console.error('Error stack:', error.stack);
+        alert(`Detailed error: ${error.message}`);
+      } else {
+        console.error('Non-Error object thrown:', error);
+        alert(`An error occurred while saving the course: ${JSON.stringify(error)}`);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const handleDelete = async (id: string) => {
+    // Prevent deleting sample courses
+    if (usingSampleData || isNumericId(id)) {
+      const course = courses.find(c => c.id === id);
+      alert(`Cannot delete sample course "${course?.title || 'Unknown'}". This is demo data.\n\nTo delete courses:\n1. Set up your Firebase configuration properly\n2. Create new courses which will be saved to your database\n3. Then you can delete your real courses`);
+      return;
+    }
+
     if (!window.confirm('Are you sure you want to delete this course?')) {
       return;
     }
@@ -401,6 +464,24 @@ const Courses: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {usingSampleData && (
+        <div className="bg-amber-50 border-l-4 border-amber-400 p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-amber-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <p className="text-sm text-amber-700">
+                <strong>Demo Mode:</strong> You're viewing sample courses because no real courses were found in your database. 
+                You cannot edit or delete these sample courses. Create new courses to start managing your real course data.
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <div className="sm:flex sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">Course Management</h1>
         <div className="mt-4 sm:mt-0">
@@ -433,7 +514,14 @@ const Courses: React.FC = () => {
                       />
                     </div>
                     <div>
-                      <h3 className="text-lg font-medium text-blue-600">{course.title}</h3>
+                      <div className="flex items-center space-x-2">
+                        <h3 className="text-lg font-medium text-blue-600">{course.title}</h3>
+                        {(usingSampleData || isNumericId(course.id)) && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                            Demo
+                          </span>
+                        )}
+                      </div>
                       <p className="text-sm text-gray-500 line-clamp-1">{course.description}</p>
                     </div>
                   </div>
@@ -454,17 +542,30 @@ const Courses: React.FC = () => {
                     </div>
                     <button
                       onClick={() => handleOpenEditModal(course)}
-                      className="p-2 text-blue-600 hover:text-blue-800"
-                      title="Edit course"
-                      disabled={deletingCourseId === course.id}
+                      className={`p-2 ${usingSampleData || isNumericId(course.id) 
+                        ? 'text-gray-400 cursor-not-allowed' 
+                        : 'text-blue-600 hover:text-blue-800'
+                      }`}
+                      title={usingSampleData || isNumericId(course.id) 
+                        ? 'Cannot edit demo course' 
+                        : 'Edit course'
+                      }
+                      disabled={deletingCourseId === course.id || usingSampleData || isNumericId(course.id)}
                     >
                       <Edit className="h-5 w-5" />
                     </button>
                     <button
                       onClick={() => handleDelete(course.id)}
-                      className="p-2 text-red-600 hover:text-red-800 disabled:opacity-50"
-                      title="Delete course"
-                      disabled={deletingCourseId === course.id}
+                      className={`p-2 disabled:opacity-50 ${
+                        usingSampleData || isNumericId(course.id)
+                          ? 'text-gray-400 cursor-not-allowed'
+                          : 'text-red-600 hover:text-red-800'
+                      }`}
+                      title={usingSampleData || isNumericId(course.id) 
+                        ? 'Cannot delete demo course' 
+                        : 'Delete course'
+                      }
+                      disabled={deletingCourseId === course.id || usingSampleData || isNumericId(course.id)}
                     >
                       {deletingCourseId === course.id ? (
                         <Loader className="h-5 w-5 animate-spin" />
@@ -622,6 +723,28 @@ const Courses: React.FC = () => {
                     onChange={handleInputChange}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label htmlFor="examType" className="block text-sm font-medium text-gray-700">
+                  Exam Type <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="examType"
+                  id="examType"
+                  required
+                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  value={formData.examType}
+                  onChange={handleInputChange}
+                >
+                  <option value="upsc">UPSC</option>
+                  <option value="tgpsc">TGPSC</option>
+                  <option value="appsc">APPSC</option>
+                  <option value="all">All Exams</option>
+                </select>
+                <p className="mt-1 text-xs text-gray-500">
+                  Select the exam type this course is designed for
+                </p>
               </div>
 
               <div>

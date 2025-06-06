@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, addDoc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { BookOpen, Edit, Trash, ChevronDown, ChevronUp, Plus, Minus, FilePlus, FolderPlus } from 'lucide-react';
+import RichTextEditor from '../../components/RichTextEditor';
 
 interface Chapter {
   id: string;
@@ -747,12 +748,11 @@ const PrelimsMCQs: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Question
                         </label>
-                        <textarea
+                        <RichTextEditor
                           value={currentMCQ.question}
-                          onChange={(e) => handleMCQChange('question', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(value) => handleMCQChange('question', value)}
+                          placeholder="Enter the question..."
                           rows={3}
-                          required
                         />
                       </div>
                       
@@ -804,12 +804,11 @@ const PrelimsMCQs: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Explanation
                         </label>
-                        <textarea
+                        <RichTextEditor
                           value={currentMCQ.explanation}
-                          onChange={(e) => handleMCQChange('explanation', e.target.value)}
-                          className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
+                          onChange={(value) => handleMCQChange('explanation', value)}
+                          placeholder="Enter the explanation..."
                           rows={3}
-                          required
                         />
                       </div>
                       
@@ -877,7 +876,10 @@ const PrelimsMCQs: React.FC = () => {
                             </button>
                           </div>
                         </div>
-                        <p className="mb-3">{mcq.question}</p>
+                        <div 
+                          className="mb-3"
+                          dangerouslySetInnerHTML={{ __html: mcq.question }}
+                        />
                         <div className="space-y-1 mb-3">
                           {mcq.options.map((option, optIndex) => (
                             <div 
@@ -897,7 +899,10 @@ const PrelimsMCQs: React.FC = () => {
                         </div>
                         <div className="mt-2 p-3 bg-blue-50 rounded-md">
                           <h4 className="text-sm font-medium text-blue-800 mb-1">Explanation:</h4>
-                          <p className="text-sm text-blue-700">{mcq.explanation}</p>
+                          <div 
+                            className="text-sm text-blue-700"
+                            dangerouslySetInnerHTML={{ __html: mcq.explanation }}
+                          />
                         </div>
                       </div>
                     ))}
