@@ -99,9 +99,18 @@ const Footer = () => {
 
         {/* Copyright */}
         <div className="border-t border-white/10 pt-8">
-          <p className="text-center text-gray-200">
-            © {currentYear} Epitome IAS Academy. All rights reserved.
-          </p>
+        <p className="text-center text-gray-200">
+  © {currentYear} All rights reserved @ Epitome IAS Academy. Designed & Developed by{' '}
+  <a 
+    href="https://webbingprotechnologies.com" 
+    target="_blank" 
+    rel="noopener noreferrer"
+    className="text-white hover:text-blue-200 underline transition-colors"
+  >
+    Webbing Pro Technologies
+  </a>
+  – 9059329297.
+</p>
         </div>
       </div>
     </footer>
