@@ -353,34 +353,17 @@ const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
                 className="bg-white rounded-lg shadow-md overflow-hidden border border-gray-200 break-inside-avoid-column hover:shadow-xl transition-shadow duration-300"
               >
                 <div className="p-4 flex items-center">
-                  <div className="mr-2 text-blue-500 text-2xl font-bold">{categoryPosts.length}</div>
                   <h2 className="text-xl font-semibold text-gray-900">{category.name}</h2>
                 </div>
                 
                 <div className="p-5">
                   {categoryPosts.length > 0 ? (
-                    <>
-                      <ul className="space-y-1 mb-6">
-                        {displayPosts.map((post) => (
-                          <li key={post.id} className="py-1">
-                            <Link 
-                              to={`/notes/${post.slug}`}
-                              className="text-blue-600 hover:text-blue-800 hover:underline flex items-start"
-                            >
-                              <span className="text-xs text-gray-500 mr-2 mt-1">•</span>
-                              <span>{post.title}</span>
-                            </Link>
-                          </li>
-                        ))}
-                      </ul>
-                      
-                      <Link
-                        to={`/category/${category.slug}`}
-                        className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200 shadow-sm hover:shadow"
-                      >
-                        Explore More
-                      </Link>
-                    </>
+                    <Link
+                      to={`/${categoryPosts[0].slug}`}
+                      className="text-blue-600 hover:text-blue-800 border border-blue-600 rounded-full px-6 py-2 inline-flex items-center justify-center text-sm font-medium hover:bg-blue-50 transition-colors duration-200 shadow-sm hover:shadow"
+                    >
+                      Explore More
+                    </Link>
                   ) : (
                     <p className="text-gray-500 italic">No posts available in this category yet.</p>
                   )}

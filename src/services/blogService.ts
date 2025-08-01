@@ -395,3 +395,4 @@ export const deleteCategory = async (id: string): Promise<void> => {
     handleFirestoreError(error as FirestoreError, 'delete category');
   }
 };
+

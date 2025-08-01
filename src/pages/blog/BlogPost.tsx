@@ -243,7 +243,9 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
               <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
                 <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
                 <div className="space-y-2">
-                  {categories.map((category) => (
+                  {categories
+                    .filter(category => post.categories.includes(category.id))
+                    .map((category) => (
                     <div key={category.id} className="border-b border-gray-100 pb-2">
                       <button
                         onClick={() => toggleCategory(category.id)}
@@ -295,59 +297,35 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
               </div>
             )}
             <div className="p-6 md:p-8 lg:p-10">
-              {isCurrentAffairProp && examTypeProp ? (
-                <Link to={`/current-affairs/${examTypeProp}`} className="text-blue-600 hover:text-blue-800">
-                  {examTypeProp.toUpperCase()} Current Affairs
-                </Link>
-              ) : isBlogProp || post.isBlog ? (
-                <Link to="/blogs" className="text-blue-600 hover:text-blue-800">
-                  Blog
-                </Link>
-              ) : (
-                <Link to="/notes" className="text-blue-600 hover:text-blue-800">
-                  Notes
-                </Link>
-              )}
-              
-              <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold text-gray-900 mb-4">{post.title}</h1>
-              
-              <div className="flex items-center space-x-3 text-sm text-gray-500 mb-6">
-                {isCurrentAffair && post.currentAffairDate && (
-                  <div className="flex items-center">
-                    <CalendarDays className="w-4 h-4 mr-1" />
-                    <time dateTime={new Date(post.currentAffairDate).toISOString()}>
-                      {formatDate(post.currentAffairDate)}
-                    </time>
-                  </div>
+              {/* Breadcrumb at top */}
+              <div className="mb-6">
+                {isCurrentAffairProp && examTypeProp ? (
+                  <Link to={`/current-affairs/${examTypeProp}`} className="text-blue-600 hover:text-blue-800">
+                    {examTypeProp.toUpperCase()} Current Affairs
+                  </Link>
+                ) : isBlogProp || post.isBlog ? (
+                  <Link to="/blogs" className="text-blue-600 hover:text-blue-800">
+                    Blog
+                  </Link>
+                ) : (
+                  <Link to="/notes" className="text-blue-600 hover:text-blue-800">
+                    {post.categories.length > 0 
+                      ? categories.find(c => c.id === post.categories[0])?.name || 'Notes'
+                      : 'Notes'
+                    }
+                  </Link>
                 )}
-                {!isCurrentAffair && (
-                  <time dateTime={new Date(post.createdAt).toISOString()}>
-                    {new Date(post.createdAt).toLocaleDateString()}
-                  </time>
-                )}
-                <span>•</span>
-                <span>{post.author}</span>
               </div>
+              
+              {/* Main title prominently displayed */}
+              <h1 className="text-3xl md:text-4xl lg:text-5xl font-bold text-gray-900 mb-8">{post.title}</h1>
 
-              {!isCurrentAffair && post.categories.length > 0 && (
-                <div className="mb-8">
-                  {post.categories.map((categoryId) => {
-                    const category = categories.find(c => c.id === categoryId);
-                    return category ? (
-                      <span
-                        key={category.id}
-                        className="inline-flex items-center px-3 py-0.5 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mr-2"
-                      >
-                        {category.name}
-                      </span>
-                    ) : null;
-                  })}
-                </div>
-              )}
-
-              <div className="prose prose-blue md:prose-lg lg:prose-xl max-w-none">
+              {/* Content */}
+              <div className="prose prose-blue md:prose-lg lg:prose-xl max-w-none mb-8">
                 <div dangerouslySetInnerHTML={{ __html: post.content }} />
               </div>
+
+
 
               {post.tags && post.tags.length > 0 && (
                 <div className="mt-8 pt-8 border-t border-gray-200">
@@ -405,7 +383,9 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
                   <>
                     <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
                     <div className="space-y-2">
-                      {categories.map((category) => (
+                      {categories
+                        .filter(category => post.categories.includes(category.id))
+                        .map((category) => (
                         <div key={category.id} className="border-b border-gray-100 pb-2">
                           <button
                             onClick={() => toggleCategory(category.id)}
