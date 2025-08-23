@@ -1,20 +1,45 @@
 import fs from 'node:fs/promises';
-import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename);
+import path from 'node:path';
 
 export default async function handler(req, res) {
   const url = req.url;
 
   try {
+    // In Vercel, files are in different locations
+    // The build output is in the function's directory
+    const templatePath = path.join(process.cwd(), 'dist/client/index.html');
+    const serverPath = path.join(process.cwd(), 'dist/server/entry-server.js');
+    
+    console.log('Template path:', templatePath);
+    console.log('Server path:', serverPath);
+    console.log('CWD:', process.cwd());
+    console.log('URL:', url);
+    
+    // Check if files exist
+    try {
+      await fs.access(templatePath);
+      console.log('Template file exists');
+    } catch {
+      console.log('Template file does not exist');
+    }
+    
+    try {
+      await fs.access(serverPath);
+      console.log('Server file exists');
+    } catch {
+      console.log('Server file does not exist');
+    }
+    
     // Read the built HTML template
-    const templatePath = resolve(__dirname, '../dist/client/index.html');
     const template = await fs.readFile(templatePath, 'utf-8');
     
     // Import the server-side render function
-    const { render } = await import('../dist/server/entry-server.js');
+    const serverModule = await import(serverPath);
+    const render = serverModule.render || serverModule.default?.render;
+    
+    if (!render) {
+      throw new Error('Render function not found in server module');
+    }
     
     // Render the app server-side
     const rendered = await render(url);
@@ -35,7 +60,7 @@ export default async function handler(req, res) {
     
     // Fallback: serve the template without SSR
     try {
-      const templatePath = resolve(__dirname, '../dist/client/index.html');
+      const templatePath = path.join(process.cwd(), 'dist/client/index.html');
       const template = await fs.readFile(templatePath, 'utf-8');
       
       // Replace SSR outlet with empty div to prevent hydration issues
@@ -46,7 +71,28 @@ export default async function handler(req, res) {
       res.status(200).send(fallbackHtml);
     } catch (fallbackError) {
       console.error('Fallback error:', fallbackError);
-      res.status(500).send('<!DOCTYPE html><html><head><title>Server Error</title></head><body><h1>500 - Server Error</h1><p>Unable to render page</p></body></html>');
+      
+      // Last resort: basic HTML
+      const basicHtml = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Epitome IAS Academy</title>
+</head>
+<body>
+    <div id="root"></div>
+    <script>
+        console.error('SSR failed, falling back to client-side rendering');
+        // This will be handled by client-side hydration
+    </script>
+</body>
+</html>`;
+      
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('X-SSR-Error', 'true');
+      res.status(200).send(basicHtml);
     }
   }
 }

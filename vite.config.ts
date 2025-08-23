@@ -12,7 +12,7 @@ export default defineConfig({
     minify: false,
     rollupOptions: {
       input: {
-        main: resolve(__dirname, 'index-template.html'),
+        main: resolve(__dirname, 'index.html'),
       },
     },
   },

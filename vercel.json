@@ -1,34 +1,31 @@
 {
-  "version": 2,
   "buildCommand": "npm run build",
   "outputDirectory": "dist/client",
-  "routes": [
+  "framework": "vite",
+  "rewrites": [
     {
-      "src": "/api/social-logo",
-      "dest": "/api/social-logo.js"
+      "source": "/api/social-logo",
+      "destination": "/api/social-logo.js"
     },
     {
-      "src": "/api/debug-image", 
-      "dest": "/api/debug-image.js"
+      "source": "/api/debug-image",
+      "destination": "/api/debug-image.js"
     },
     {
-      "src": "/api/images/courses/(.*)",
-      "dest": "/api/course-image/[...path].js?path=courses/$1"
+      "source": "/api/images/courses/(.*)",
+      "destination": "/api/course-image/[...path].js?path=courses/$1"
     },
     {
-      "src": "/api/course-image/(.*)",
-      "dest": "/api/course-image/[...path].js?path=$1"
+      "source": "/api/course-image/(.*)",
+      "destination": "/api/course-image/[...path].js?path=$1"
     },
     {
-      "src": "/api/images/(.*)",
-      "dest": "/api/images/[...path].js"
+      "source": "/api/images/(.*)",
+      "destination": "/api/images/[...path].js"
     },
     {
-      "handle": "filesystem"
-    },
-    {
-      "src": "/(.*)",
-      "dest": "/api/index"
+      "source": "/(.*)",
+      "destination": "/api/ssr"
     }
   ]
 } 
