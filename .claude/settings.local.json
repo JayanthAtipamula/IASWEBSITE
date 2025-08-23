@@ -5,7 +5,8 @@
       "Bash(npm install:*)",
       "Bash(npm run dev:*)",
       "WebFetch(domain:lexical.dev)",
-      "Bash(npm run build:*)"
+      "Bash(npm run build:*)",
+      "WebFetch(domain:github.com)"
     ],
     "deny": [],
     "ask": []

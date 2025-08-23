@@ -28,6 +28,7 @@ import CurrentAffairsDebug from './pages/CurrentAffairsDebug';
 import APPSCCurrentAffairsDetailPage from './pages/APPSCCurrentAffairsDetailPage';
 import CurrentAffairsRawData from './pages/CurrentAffairsRawData';
 import FirebaseConnectionTest from './components/FirebaseConnectionTest';
+import EditorDebugTest from './pages/EditorDebugTest';
 
 // Notes Pages
 import BlogIndex from './pages/blog/BlogIndex';
@@ -172,6 +173,7 @@ const App = () => {
           {/* Debug Routes */}
           <Route path="/current-affairs-debug" element={<CurrentAffairsDebug />} />
           <Route path="/current-affairs-raw" element={<CurrentAffairsRawData />} />
+          <Route path="/editor-debug" element={<EditorDebugTest />} />
           
           {/* Firebase Connection Test Route (for development) */}
           <Route path="/firebase-test" element={<FirebaseConnectionTest />} />

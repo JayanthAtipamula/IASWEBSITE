@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BlogPostFormData, Category } from '../../types/blog';
 import { createBlogPost, updateBlogPost, getBlogPost, getCategories } from '../../services/blogService';
 import { useAuth } from '../../contexts/AuthContext';
-import ClientOnlyLexicalEditor from '../../components/ClientOnlyLexicalEditor';
+import AdvancedLexicalEditor from '../../components/AdvancedLexicalEditor';
 import FeaturedImageUpload from '../../components/admin/FeaturedImageUpload';
 import LoadingScreen from '../../components/LoadingScreen';
 
@@ -119,7 +119,7 @@ const BlogPostEditor: React.FC = () => {
     console.log("currentAffairDate as ISO string:", formData.currentAffairDate ? new Date(formData.currentAffairDate).toISOString() : 'No date set');
 
     // Create submission data by copying only the necessary fields
-    let submissionData: any = {
+    const submissionData: any = {
       title: formData.title,
       content: formData.content,
       excerpt: formData.excerpt,
@@ -269,10 +269,14 @@ const BlogPostEditor: React.FC = () => {
                 Content
               </label>
               <div className="min-h-[200px]">
-                <ClientOnlyLexicalEditor 
+                <AdvancedLexicalEditor 
                   content={formData.content} 
                   onChange={handleContentChange} 
                   placeholder="Write your post content here..."
+                  documentId={id}
+                  collection="blogPosts"
+                  autoSave={false}
+                  showSaveButton={!!id}
                 />
               </div>
             </div>

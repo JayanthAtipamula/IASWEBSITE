@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { LexicalComposer } from '@lexical/react/LexicalComposer';
 import { RichTextPlugin } from '@lexical/react/LexicalRichTextPlugin';
 import { ContentEditable } from '@lexical/react/LexicalContentEditable';
@@ -23,17 +23,21 @@ import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
 import { TRANSFORMERS } from '@lexical/markdown';
 import {
   FORMAT_TEXT_COMMAND,
+  FORMAT_ELEMENT_COMMAND,
+  UNDO_COMMAND,
+  REDO_COMMAND,
   $getSelection,
   $isRangeSelection,
   EditorState,
   $getRoot,
-  $insertNodes,
-  $createTextNode
+  $createTextNode,
+  CAN_UNDO_COMMAND,
+  CAN_REDO_COMMAND
 } from 'lexical';
 import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';
 import { INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from '@lexical/list';
 import { TOGGLE_LINK_COMMAND } from '@lexical/link';
-import { $setBlocksType } from '@lexical/selection';
+import { $setBlocksType, $getSelectionStyleValueForProperty, $patchStyleText } from '@lexical/selection';
 
 interface LexicalEditorProps {
   content: string;
@@ -110,7 +114,7 @@ function HtmlInitializerPlugin({ html }: { html: string }) {
               // This looks like valid Lexical JSON, but we need to set it outside update
               return;
             }
-          } catch (jsonError) {
+          } catch {
             // Not valid JSON, treat as plain text
           }
           
@@ -134,7 +138,7 @@ function HtmlInitializerPlugin({ html }: { html: string }) {
           const editorState = editor.parseEditorState(trimmedHtml);
           editor.setEditorState(editorState);
         }
-      } catch (error) {
+      } catch {
         // Already handled in update above
       }
     }
@@ -143,14 +147,128 @@ function HtmlInitializerPlugin({ html }: { html: string }) {
   return null;
 }
 
-// Simplified toolbar component
+// Enhanced toolbar component with all features
 function ToolbarPlugin() {
   const [editor] = useLexicalComposerContext();
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+  const [isBold, setIsBold] = useState(false);
+  const [isItalic, setIsItalic] = useState(false);
+  const [isUnderline, setIsUnderline] = useState(false);
+  const [isCode, setIsCode] = useState(false);
+  const [fontSize, setFontSize] = useState('15px');
+  const [fontFamily, setFontFamily] = useState('Arial');
+  const [fontColor, setFontColor] = useState('#000000');
+  const [bgColor, setBgColor] = useState('#ffffff');
 
-  const formatText = (format: 'bold' | 'italic' | 'underline' | 'strikethrough') => {
-    editor.dispatchCommand(FORMAT_TEXT_COMMAND, {
-      [format]: true,
+  useEffect(() => {
+    const updateToolbar = () => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        setIsBold(selection.hasFormat('bold'));
+        setIsItalic(selection.hasFormat('italic'));
+        setIsUnderline(selection.hasFormat('underline'));
+        setIsCode(selection.hasFormat('code'));
+        
+        // Get font size
+        const fontSizeValue = $getSelectionStyleValueForProperty(selection, 'font-size', '15px');
+        setFontSize(fontSizeValue);
+        
+        // Get font family
+        const fontFamilyValue = $getSelectionStyleValueForProperty(selection, 'font-family', 'Arial');
+        setFontFamily(fontFamilyValue);
+        
+        // Get font color
+        const colorValue = $getSelectionStyleValueForProperty(selection, 'color', '#000000');
+        setFontColor(colorValue);
+        
+        // Get background color
+        const bgColorValue = $getSelectionStyleValueForProperty(selection, 'background-color', '#ffffff');
+        setBgColor(bgColorValue);
+      }
+    };
+
+    const unregisterMergeListener = editor.registerUpdateListener(({ editorState }) => {
+      editorState.read(() => {
+        updateToolbar();
+      });
     });
+
+    const unregisterCommand = editor.registerCommand(
+      CAN_UNDO_COMMAND,
+      (canUndo: boolean) => {
+        setCanUndo(canUndo);
+        return false;
+      },
+      1
+    );
+
+    const unregisterCommand2 = editor.registerCommand(
+      CAN_REDO_COMMAND,
+      (canRedo: boolean) => {
+        setCanRedo(canRedo);
+        return false;
+      },
+      1
+    );
+
+    return () => {
+      unregisterMergeListener();
+      unregisterCommand();
+      unregisterCommand2();
+    };
+  }, [editor]);
+
+  const formatText = (format: 'bold' | 'italic' | 'underline' | 'strikethrough' | 'code') => {
+    editor.dispatchCommand(FORMAT_TEXT_COMMAND, format);
+  };
+
+  const handleUndo = () => {
+    editor.dispatchCommand(UNDO_COMMAND, undefined);
+  };
+
+  const handleRedo = () => {
+    editor.dispatchCommand(REDO_COMMAND, undefined);
+  };
+
+  const handleFontSizeChange = (newSize: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, {
+          'font-size': newSize,
+        });
+      }
+    });
+    setFontSize(newSize);
+  };
+
+  const handleFontFamilyChange = (newFamily: string) => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, {
+          'font-family': newFamily,
+        });
+      }
+    });
+    setFontFamily(newFamily);
+  };
+
+  const handleColorChange = (color: string, property: 'color' | 'background-color') => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        $patchStyleText(selection, {
+          [property]: color,
+        });
+      }
+    });
+    if (property === 'color') {
+      setFontColor(color);
+    } else {
+      setBgColor(color);
+    }
   };
 
   const insertHeading = (headingSize: 'h1' | 'h2' | 'h3') => {
@@ -186,14 +304,117 @@ function ToolbarPlugin() {
     }
   };
 
+  const handleAlignment = (alignment: 'left' | 'center' | 'right' | 'justify') => {
+    editor.dispatchCommand(FORMAT_ELEMENT_COMMAND, alignment);
+  };
+
   return (
-    <div className="toolbar flex flex-wrap items-center gap-2 p-2 border-b border-gray-300 bg-gray-50">
+    <div className="toolbar flex flex-wrap items-center gap-2 p-2 border-b border-gray-200 bg-white shadow-sm">
+      {/* Undo/Redo */}
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={handleUndo}
+          disabled={!canUndo}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Undo"
+        >
+          ↶
+        </button>
+        <button
+          type="button"
+          onClick={handleRedo}
+          disabled={!canRedo}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50 disabled:cursor-not-allowed"
+          title="Redo"
+        >
+          ↷
+        </button>
+      </div>
+
+      <div className="w-px h-6 bg-gray-300"></div>
+
+      {/* Format Dropdown */}
+      <div className="relative">
+        <select
+          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === 'paragraph') {
+              // Convert to paragraph
+            } else if (value.startsWith('h')) {
+              insertHeading(value as 'h1' | 'h2' | 'h3');
+            }
+          }}
+        >
+          <option value="paragraph">Normal</option>
+          <option value="h1">Heading 1</option>
+          <option value="h2">Heading 2</option>
+          <option value="h3">Heading 3</option>
+        </select>
+      </div>
+
+      {/* Font Family */}
+      <div className="relative">
+        <select
+          value={fontFamily}
+          onChange={(e) => handleFontFamilyChange(e.target.value)}
+          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+        >
+          <option value="Arial">Arial</option>
+          <option value="Georgia">Georgia</option>
+          <option value="Times New Roman">Times New Roman</option>
+          <option value="Helvetica">Helvetica</option>
+          <option value="Courier New">Courier New</option>
+        </select>
+      </div>
+
+      {/* Font Size */}
+      <div className="flex items-center gap-1">
+        <button
+          type="button"
+          onClick={() => {
+            const currentSize = parseInt(fontSize);
+            if (currentSize > 8) {
+              handleFontSizeChange(`${currentSize - 1}px`);
+            }
+          }}
+          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          title="Decrease Font Size"
+        >
+          -
+        </button>
+        <input
+          type="text"
+          value={fontSize.replace('px', '')}
+          onChange={(e) => handleFontSizeChange(`${e.target.value}px`)}
+          className="w-12 px-1 py-1 text-sm text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+        />
+        <button
+          type="button"
+          onClick={() => {
+            const currentSize = parseInt(fontSize);
+            if (currentSize < 72) {
+              handleFontSizeChange(`${currentSize + 1}px`);
+            }
+          }}
+          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          title="Increase Font Size"
+        >
+          +
+        </button>
+      </div>
+
+      <div className="w-px h-6 bg-gray-300"></div>
+
       {/* Text formatting */}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => formatText('bold')}
-          className="px-2 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-100"
+          className={`px-3 py-1 text-sm font-bold border rounded hover:bg-gray-100 ${
+            isBold ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          }`}
           title="Bold"
         >
           B
@@ -201,7 +422,9 @@ function ToolbarPlugin() {
         <button
           type="button"
           onClick={() => formatText('italic')}
-          className="px-2 py-1 text-sm italic border border-gray-300 rounded hover:bg-gray-100"
+          className={`px-3 py-1 text-sm italic border rounded hover:bg-gray-100 ${
+            isItalic ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          }`}
           title="Italic"
         >
           I
@@ -209,93 +432,97 @@ function ToolbarPlugin() {
         <button
           type="button"
           onClick={() => formatText('underline')}
-          className="px-2 py-1 text-sm underline border border-gray-300 rounded hover:bg-gray-100"
+          className={`px-3 py-1 text-sm underline border rounded hover:bg-gray-100 ${
+            isUnderline ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          }`}
           title="Underline"
         >
           U
         </button>
         <button
           type="button"
-          onClick={() => formatText('strikethrough')}
-          className="px-2 py-1 text-sm line-through border border-gray-300 rounded hover:bg-gray-100"
-          title="Strikethrough"
+          onClick={() => formatText('code')}
+          className={`px-3 py-1 text-sm font-mono border rounded hover:bg-gray-100 ${
+            isCode ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          }`}
+          title="Code"
         >
-          S
+          &lt;/&gt;
         </button>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
+      {/* Link */}
+      <button
+        type="button"
+        onClick={insertLink}
+        className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded"
+        title="Link"
+      >
+        🔗
+      </button>
 
-      {/* Headings */}
+      {/* Colors */}
       <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => insertHeading('h1')}
-          className="px-2 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-100"
-          title="Heading 1"
-        >
-          H1
-        </button>
-        <button
-          type="button"
-          onClick={() => insertHeading('h2')}
-          className="px-2 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-100"
-          title="Heading 2"
-        >
-          H2
-        </button>
-        <button
-          type="button"
-          onClick={() => insertHeading('h3')}
-          className="px-2 py-1 text-sm font-bold border border-gray-300 rounded hover:bg-gray-100"
-          title="Heading 3"
-        >
-          H3
-        </button>
+        <div className="relative">
+          <input
+            type="color"
+            value={fontColor}
+            onChange={(e) => handleColorChange(e.target.value, 'color')}
+            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+            title="Text Color"
+          />
+          <span className="absolute -bottom-1 left-1 text-xs font-bold">A</span>
+        </div>
+        <div className="relative">
+          <input
+            type="color"
+            value={bgColor}
+            onChange={(e) => handleColorChange(e.target.value, 'background-color')}
+            className="w-8 h-8 border border-gray-300 rounded cursor-pointer"
+            title="Background Color"
+          />
+        </div>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
-
-      {/* Lists */}
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={() => insertList('bullet')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Bullet List"
+      {/* Insert Menu */}
+      <div className="relative">
+        <select
+          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => {
+            const value = e.target.value;
+            if (value === 'bullet-list') {
+              insertList('bullet');
+            } else if (value === 'number-list') {
+              insertList('number');
+            } else if (value === 'quote') {
+              insertQuote();
+            }
+            e.target.value = 'insert';
+          }}
+          defaultValue="insert"
         >
-          • List
-        </button>
-        <button
-          type="button"
-          onClick={() => insertList('number')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Numbered List"
-        >
-          1. List
-        </button>
+          <option value="insert">Insert</option>
+          <option value="bullet-list">Bullet List</option>
+          <option value="number-list">Numbered List</option>
+          <option value="quote">Quote</option>
+        </select>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
-
-      {/* Other elements */}
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={insertQuote}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Quote"
+      {/* Alignment */}
+      <div className="relative">
+        <select
+          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          onChange={(e) => {
+            const value = e.target.value as 'left' | 'center' | 'right' | 'justify';
+            handleAlignment(value);
+          }}
+          defaultValue="left"
         >
-          Quote
-        </button>
-        <button
-          type="button"
-          onClick={insertLink}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Link"
-        >
-          Link
-        </button>
+          <option value="left">Left Align</option>
+          <option value="center">Center</option>
+          <option value="right">Right Align</option>
+          <option value="justify">Justify</option>
+        </select>
       </div>
     </div>
   );
@@ -305,7 +532,7 @@ function ToolbarPlugin() {
 function MyOnChangePlugin({ onChange }: { onChange: (content: string) => void }) {
   const [editor] = useLexicalComposerContext();
   
-  const handleChange = useCallback((editorState: EditorState) => {
+  const handleChange = useCallback((_editorState: EditorState) => {
     try {
       editor.update(() => {
         try {
@@ -336,6 +563,7 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({ content, onChange, placeh
         italic: 'italic',
         underline: 'underline',
         strikethrough: 'line-through',
+        code: 'bg-gray-100 px-1 py-0.5 rounded text-sm font-mono',
       },
       heading: {
         h1: 'text-3xl font-bold mb-4',
@@ -352,6 +580,7 @@ const LexicalEditor: React.FC<LexicalEditorProps> = ({ content, onChange, placeh
       },
       quote: 'border-l-4 border-gray-300 pl-4 italic text-gray-600 my-4',
       link: 'text-blue-600 underline hover:text-blue-800',
+      code: 'bg-gray-100 border border-gray-200 rounded p-4 my-2 font-mono text-sm overflow-x-auto',
     },
     nodes: [
       HeadingNode,

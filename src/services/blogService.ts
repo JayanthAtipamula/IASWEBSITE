@@ -280,7 +280,7 @@ export const updateBlogPost = async (id: string, data: Partial<BlogPostFormData>
     }
     
     // Create updates object with timestamp
-    let updates: Record<string, any> = {
+    const updates: Record<string, any> = {
       updatedAt: Timestamp.now().toMillis()
     };
     

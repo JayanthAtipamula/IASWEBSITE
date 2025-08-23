@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 import { useFirebaseEditor, UseFirebaseEditorOptions } from '../hooks/useFirebaseEditor';
-import ClientOnlyLexicalEditor from './ClientOnlyLexicalEditor';
+import AdvancedLexicalEditor from './AdvancedLexicalEditor';
 import LoadingScreen from './LoadingScreen';
 
 interface FirebaseEditorProps extends UseFirebaseEditorOptions {
@@ -256,10 +256,14 @@ const FirebaseEditor: React.FC<FirebaseEditorProps> = ({
 
         {/* Content Editor */}
         <div className="relative">
-          <ClientOnlyLexicalEditor
+          <AdvancedLexicalEditor
             content={content}
             onChange={handleContentChange}
             placeholder={placeholder}
+            documentId={documentId}
+            collection={collection}
+            autoSave={false}
+            showSaveButton={true}
             key={`editor-${documentId}-${content.length}`}
           />
           

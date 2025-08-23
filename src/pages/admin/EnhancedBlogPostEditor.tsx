@@ -129,7 +129,7 @@ const EnhancedBlogPostEditor: React.FC = () => {
     });
 
     // Create submission data
-    let submissionData: any = {
+    const submissionData: any = {
       title: formData.title,
       content: formData.content,
       excerpt: formData.excerpt,
