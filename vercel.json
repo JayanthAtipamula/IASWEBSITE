@@ -7,19 +7,5 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
-  ],
-  "functions": {
-    "api/social-logo.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/debug-image.js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/course-image/[...path].js": {
-      "runtime": "nodejs18.x"
-    },
-    "api/images/[...path].js": {
-      "runtime": "nodejs18.x"
-    }
-  }
+  ]
 } 
