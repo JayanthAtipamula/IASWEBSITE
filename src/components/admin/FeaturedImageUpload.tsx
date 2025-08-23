@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { uploadImage } from '../../services/fileUploadService';
 import { getProxiedImageUrl } from '../../utils/imageUtils';
+import { useAuth } from '../../contexts/AuthContext';
 
 interface FeaturedImageUploadProps {
   initialImage?: string;
@@ -11,9 +12,11 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
   initialImage, 
   onImageUploaded 
 }) => {
+  const { user, isAdmin } = useAuth();
   const [image, setImage] = useState<string | undefined>(initialImage);
   const [isUploading, setIsUploading] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Get the display URL (proxied) for the image
@@ -24,13 +27,39 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
 
     try {
       setIsUploading(true);
+      setError(null);
+      
+      console.log('Upload Debug Info:', {
+        fileName: file.name,
+        fileSize: file.size,
+        fileType: file.type,
+        userAuthenticated: !!user,
+        isAdmin: isAdmin,
+        userUID: user?.uid,
+        userEmail: user?.email
+      });
+      
+      // Check authentication before upload
+      if (!user) {
+        throw new Error('You must be logged in to upload files');
+      }
+      
+      if (!isAdmin) {
+        throw new Error('You must have admin privileges to upload files');
+      }
+      
       const imageUrl = await uploadImage(file);
       
       setImage(imageUrl);
       onImageUploaded(imageUrl);
-    } catch (error) {
+      console.log('Image upload successful:', imageUrl);
+    } catch (error: any) {
       console.error('Error uploading image:', error);
-      alert('Failed to upload image. Please try again.');
+      const errorMessage = error.message || 'Failed to upload image. Please try again.';
+      setError(errorMessage);
+      
+      // Show user-friendly alert
+      alert(`Upload failed: ${errorMessage}`);
     } finally {
       setIsUploading(false);
       // Reset the input
@@ -81,6 +110,16 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
     <div className="space-y-4">
       <label className="block text-sm font-medium text-gray-700">
         Featured Image
+        {user && (
+          <span className="ml-2 text-xs text-green-600">
+            ✓ Authenticated {isAdmin ? '(Admin)' : '(User)'}
+          </span>
+        )}
+        {!user && (
+          <span className="ml-2 text-xs text-red-600">
+            ⚠ Not authenticated
+          </span>
+        )}
       </label>
       
       {image ? (
@@ -179,6 +218,35 @@ const FeaturedImageUpload: React.FC<FeaturedImageUploadProps> = ({
               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
             </svg>
             <span className="text-sm text-gray-700">Uploading image...</span>
+          </div>
+        </div>
+      )}
+      
+      {error && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">
+                Upload Error
+              </h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{error}</p>
+              </div>
+              <div className="mt-3">
+                <button
+                  type="button"
+                  onClick={() => setError(null)}
+                  className="text-sm bg-red-100 text-red-800 px-3 py-1 rounded hover:bg-red-200 focus:outline-none focus:ring-2 focus:ring-red-500"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

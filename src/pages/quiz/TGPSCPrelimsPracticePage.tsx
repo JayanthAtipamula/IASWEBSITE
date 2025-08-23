@@ -11,6 +11,8 @@ const TGPSCPrelimsPracticePage: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [dateFilter, setDateFilter] = useState<string>('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -77,6 +79,34 @@ const TGPSCPrelimsPracticePage: React.FC = () => {
           return quizDate >= monthAgo;
         });
         break;
+      case 'custom':
+        // Custom date range filtering
+        if (fromDate && toDate) {
+          const fromDateTime = new Date(fromDate);
+          fromDateTime.setHours(0, 0, 0, 0);
+          const toDateTime = new Date(toDate);
+          toDateTime.setHours(23, 59, 59, 999);
+          
+          filtered = quizzes.filter(quiz => {
+            const quizDate = quiz.createdAt.toDate();
+            return quizDate >= fromDateTime && quizDate <= toDateTime;
+          });
+        } else if (fromDate) {
+          const fromDateTime = new Date(fromDate);
+          fromDateTime.setHours(0, 0, 0, 0);
+          filtered = quizzes.filter(quiz => {
+            const quizDate = quiz.createdAt.toDate();
+            return quizDate >= fromDateTime;
+          });
+        } else if (toDate) {
+          const toDateTime = new Date(toDate);
+          toDateTime.setHours(23, 59, 59, 999);
+          filtered = quizzes.filter(quiz => {
+            const quizDate = quiz.createdAt.toDate();
+            return quizDate <= toDateTime;
+          });
+        }
+        break;
       case 'all':
       default:
         // No filter, show all
@@ -84,7 +114,7 @@ const TGPSCPrelimsPracticePage: React.FC = () => {
     }
 
     setFilteredQuizzes(filtered);
-  }, [dateFilter, quizzes]);
+  }, [dateFilter, quizzes, fromDate, toDate]);
 
   const handleQuizClick = (quizId: string) => {
     navigate(`/quiz/${quizId}`);
@@ -166,8 +196,50 @@ const TGPSCPrelimsPracticePage: React.FC = () => {
                 <Calendar className="h-3.5 w-3.5 mr-1" />
                 This Month
               </button>
+              <button
+                onClick={() => setDateFilter('custom')}
+                className={`px-3 py-1.5 text-sm rounded-full flex items-center ${dateFilter === 'custom' 
+                  ? 'bg-indigo-100 text-indigo-700 border border-indigo-200' 
+                  : 'bg-gray-100 text-gray-700 hover:bg-gray-200'}`}
+              >
+                <Calendar className="h-3.5 w-3.5 mr-1" />
+                Custom Range
+              </button>
             </div>
           </div>
+          
+          {/* Custom Date Range Fields */}
+          {dateFilter === 'custom' && (
+            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div>
+                <label htmlFor="from-date" className="block text-sm font-medium text-gray-700 mb-1">
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  id="from-date"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  max={toDate || undefined}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="to-date" className="block text-sm font-medium text-gray-700 mb-1">
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  id="to-date"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  min={fromDate || undefined}
+                />
+              </div>
+            </div>
+          )}
           {dateFilter !== 'all' && (
             <div className="mt-3 text-sm text-gray-500 text-center sm:text-right">
               Showing {filteredQuizzes.length} {filteredQuizzes.length === 1 ? 'quiz' : 'quizzes'} from {dateFilter === 'today' ? 'today' : dateFilter === 'week' ? 'the past 7 days' : 'the past 30 days'}

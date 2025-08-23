@@ -31,6 +31,8 @@ const QuizAttempts: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [dateFilter, setDateFilter] = useState('all');
   const [scoreFilter, setScoreFilter] = useState('all');
+  const [fromDate, setFromDate] = useState('');
+  const [toDate, setToDate] = useState('');
   
   useEffect(() => {
     const fetchQuizAttempts = async () => {
@@ -109,11 +111,35 @@ const QuizAttempts: React.FC = () => {
           startDate = new Date(now);
           startDate.setMonth(startDate.getMonth() - 1);
           break;
+        case 'custom':
+          // Custom date range filtering
+          if (fromDate && toDate) {
+            const fromDateTime = new Date(fromDate);
+            fromDateTime.setHours(0, 0, 0, 0);
+            const toDateTime = new Date(toDate);
+            toDateTime.setHours(23, 59, 59, 999);
+            
+            filtered = filtered.filter(attempt => {
+              const attemptDate = attempt.completedAt;
+              return attemptDate >= fromDateTime && attemptDate <= toDateTime;
+            });
+          } else if (fromDate) {
+            const fromDateTime = new Date(fromDate);
+            fromDateTime.setHours(0, 0, 0, 0);
+            filtered = filtered.filter(attempt => attempt.completedAt >= fromDateTime);
+          } else if (toDate) {
+            const toDateTime = new Date(toDate);
+            toDateTime.setHours(23, 59, 59, 999);
+            filtered = filtered.filter(attempt => attempt.completedAt <= toDateTime);
+          }
+          return; // Exit early for custom date range
         default:
           startDate = new Date(0); // Beginning of time
       }
       
-      filtered = filtered.filter(attempt => attempt.completedAt >= startDate);
+      if (dateFilter !== 'custom') {
+        filtered = filtered.filter(attempt => attempt.completedAt >= startDate);
+      }
     }
     
     // Apply score filter
@@ -139,7 +165,7 @@ const QuizAttempts: React.FC = () => {
     }
     
     setFilteredAttempts(filtered);
-  }, [searchTerm, dateFilter, scoreFilter, attempts]);
+  }, [searchTerm, dateFilter, scoreFilter, attempts, fromDate, toDate]);
   
   // Format time in minutes and seconds
   const formatTime = (seconds: number) => {
@@ -224,7 +250,7 @@ const QuizAttempts: React.FC = () => {
       
       {/* Filters */}
       <div className="bg-white p-4 shadow rounded-lg mb-6">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
+        <div className={`grid grid-cols-1 gap-4 ${dateFilter === 'custom' ? 'md:grid-cols-6' : 'md:grid-cols-4'}`}>
           {/* Search */}
           <div className="relative">
             <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -254,6 +280,7 @@ const QuizAttempts: React.FC = () => {
               <option value="today">Today</option>
               <option value="week">Last 7 Days</option>
               <option value="month">Last 30 Days</option>
+              <option value="custom">Custom Date Range</option>
             </select>
           </div>
           
@@ -274,6 +301,39 @@ const QuizAttempts: React.FC = () => {
               <option value="low">Low (Below 50%)</option>
             </select>
           </div>
+          
+          {/* Custom Date Range Fields */}
+          {dateFilter === 'custom' && (
+            <>
+              <div>
+                <label htmlFor="from-date" className="block text-sm font-medium text-gray-700">
+                  From Date
+                </label>
+                <input
+                  type="date"
+                  id="from-date"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  value={fromDate}
+                  onChange={(e) => setFromDate(e.target.value)}
+                  max={toDate || undefined}
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="to-date" className="block text-sm font-medium text-gray-700">
+                  To Date
+                </label>
+                <input
+                  type="date"
+                  id="to-date"
+                  className="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                  value={toDate}
+                  onChange={(e) => setToDate(e.target.value)}
+                  min={fromDate || undefined}
+                />
+              </div>
+            </>
+          )}
           
           {/* Results Count */}
           <div className="flex items-end">

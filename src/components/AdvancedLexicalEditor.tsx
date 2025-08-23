@@ -41,8 +41,6 @@ import {
 import { $createHeadingNode, $createQuoteNode } from '@lexical/rich-text';
 import { $createCodeNode } from '@lexical/code';
 import { INSERT_UNORDERED_LIST_COMMAND, INSERT_ORDERED_LIST_COMMAND } from '@lexical/list';
-import { TOGGLE_LINK_COMMAND } from '@lexical/link';
-import { INSERT_TABLE_COMMAND } from '@lexical/table';
 import { $setBlocksType, $getSelectionStyleValueForProperty, $patchStyleText } from '@lexical/selection';
 
 // Firebase
@@ -299,20 +297,22 @@ function ColorPicker({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className="w-8 h-8 border border-gray-300 rounded cursor-pointer flex items-center justify-center hover:border-gray-400 transition-colors"
+        className="w-8 h-8 border border-gray-300 rounded-md cursor-pointer flex items-center justify-center hover:border-gray-400 transition-all duration-200 shadow-sm"
         style={{ backgroundColor: color }}
         title={title}
       >
         {title.includes('Text') && (
-          <span className="text-xs font-bold" style={{ 
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24" style={{ 
             color: color === '#000000' ? '#ffffff' : '#000000',
-            textShadow: color === '#000000' ? 'none' : '1px 1px 1px rgba(255,255,255,0.8)'
+            filter: color === '#000000' ? 'none' : 'drop-shadow(1px 1px 1px rgba(255,255,255,0.8))'
           }}>
-            A
-          </span>
+            <path d="M2.5 4v3h5v12h3V7h5V4h-13zm19 5h-9v3h3v7h3v-7h3V9z"/>
+          </svg>
         )}
         {title.includes('Background') && (
-          <span className="text-xs font-bold text-gray-600">■</span>
+          <svg className="w-4 h-4 text-gray-600" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M20.71 5.63l-2.34-2.34c-.39-.39-1.02-.39-1.41 0l-3.12 3.12-1.93-1.91-1.41 1.41 1.42 1.42L3 16.25V21h4.75l8.92-8.92 1.42 1.42 1.41-1.41-1.91-1.93 3.12-3.12c.39-.39.39-1.02 0-1.41zM6.92 19L5 17.08l8.06-8.06 1.92 1.92L6.92 19z"/>
+          </svg>
         )}
       </button>
       
@@ -387,7 +387,6 @@ function ComprehensiveToolbarPlugin({
   const [fontSize, setFontSize] = useState('16px');
   const [fontFamily, setFontFamily] = useState('Arial');
   const [fontColor, setFontColor] = useState('#000000');
-  const [bgColor, setBgColor] = useState('#ffffff');
   const [blockType, setBlockType] = useState('paragraph');
   const [isSaving, setIsSaving] = useState(false);
 
@@ -413,9 +412,6 @@ function ComprehensiveToolbarPlugin({
         
         const colorValue = $getSelectionStyleValueForProperty(selection, 'color', '#000000') || '#000000';
         setFontColor(colorValue);
-        
-        const bgColorValue = $getSelectionStyleValueForProperty(selection, 'background-color', 'transparent') || 'transparent';
-        setBgColor(bgColorValue === 'transparent' ? '#ffffff' : bgColorValue);
       }
     };
 
@@ -506,21 +502,17 @@ function ComprehensiveToolbarPlugin({
     setFontFamily(newFamily);
   };
 
-  const handleColorChange = (color: string, property: 'color' | 'background-color') => {
+  const handleColorChange = (color: string) => {
     editor.update(() => {
       const selection = $getSelection();
       if ($isRangeSelection(selection)) {
         // Apply color to selected text or current selection
-        $patchStyleText(selection, { [property]: color });
+        $patchStyleText(selection, { 'color': color });
       }
     });
     
     // Update local state immediately
-    if (property === 'color') {
-      setFontColor(color);
-    } else {
-      setBgColor(color);
-    }
+    setFontColor(color);
   };
 
   // Text transformations
@@ -592,37 +584,8 @@ function ComprehensiveToolbarPlugin({
     }
   };
 
-  // Insert functions
-  const insertLink = () => {
-    const url = prompt('Enter URL:');
-    if (url) {
-      editor.dispatchCommand(TOGGLE_LINK_COMMAND, url);
-    }
-  };
-
-  const insertTable = () => {
-    editor.dispatchCommand(INSERT_TABLE_COMMAND, { columns: '3', rows: '3' });
-  };
-
-  const insertImage = () => {
-    const url = prompt('Enter image URL:');
-    if (url) {
-      editor.update(() => {
-        const selection = $getSelection();
-        if ($isRangeSelection(selection)) {
-          const img = document.createElement('img');
-          img.src = url;
-          img.style.maxWidth = '100%';
-          img.style.height = 'auto';
-          
-          const parser = new DOMParser();
-          const dom = parser.parseFromString(`<p><img src="${url}" style="max-width: 100%; height: auto;" /></p>`, 'text/html');
-          const nodes = $generateNodesFromDOM(editor, dom);
-          selection.insertNodes(nodes);
-        }
-      });
-    }
-  };
+  // Removed insertLink, insertImage, and insertTable functions per user request
+  // These functions were supporting the removed toolbar buttons
 
   // Alignment
   const handleAlignment = (alignment: 'left' | 'center' | 'right' | 'justify') => {
@@ -657,7 +620,7 @@ function ComprehensiveToolbarPlugin({
   }, [editor, onSave]);
 
   return (
-    <div className="toolbar flex flex-wrap items-center gap-2 p-3 border-b border-gray-200 bg-white shadow-sm">
+    <div className="toolbar flex flex-wrap items-center gap-2 p-4 border-b border-gray-200 bg-gray-50 shadow-sm">
       {/* Save Button */}
       {showSaveButton && (
         <>
@@ -665,7 +628,7 @@ function ComprehensiveToolbarPlugin({
             type="button"
             onClick={handleSave}
             disabled={isSaving}
-            className="px-4 py-2 bg-blue-500 text-white text-sm font-medium rounded hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-4 py-2 bg-blue-600 text-white text-sm font-medium rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 shadow-sm transition-all duration-200"
             title="Save Content"
           >
             {isSaving ? (
@@ -678,11 +641,14 @@ function ComprehensiveToolbarPlugin({
               </>
             ) : (
               <>
-                💾 Save
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3-3m0 0l-3 3m3-3v12" />
+                </svg>
+                Save
               </>
             )}
           </button>
-          <div className="w-px h-6 bg-gray-300"></div>
+          <div className="w-px h-6 bg-gray-300 mx-1"></div>
         </>
       )}
 
@@ -692,30 +658,34 @@ function ComprehensiveToolbarPlugin({
           type="button"
           onClick={handleUndo}
           disabled={!canUndo}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
           title="Undo (Ctrl+Z)"
         >
-          ↶
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6" />
+          </svg>
         </button>
         <button
           type="button"
           onClick={handleRedo}
           disabled={!canRedo}
-          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded disabled:opacity-50"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-md disabled:opacity-40 disabled:cursor-not-allowed transition-all duration-200"
           title="Redo (Ctrl+Y)"
         >
-          ↷
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 10H11a8 8 0 00-8 8v2m18-10l-6-6m6 6l-6 6" />
+          </svg>
         </button>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
+      <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
       {/* Block Format Dropdown */}
       <div className="relative">
         <select
           value={blockType}
           onChange={(e) => formatBlock(e.target.value)}
-          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
         >
           <option value="paragraph">Normal</option>
           <option value="h1">Heading 1</option>
@@ -731,7 +701,7 @@ function ComprehensiveToolbarPlugin({
         <select
           value={fontFamily}
           onChange={(e) => handleFontFamilyChange(e.target.value)}
-          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
         >
           <option value="Arial">Arial</option>
           <option value="Georgia">Georgia</option>
@@ -753,16 +723,18 @@ function ComprehensiveToolbarPlugin({
               handleFontSizeChange(`${currentSize - 1}px`);
             }
           }}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm"
           title="Decrease Font Size"
         >
-          -
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M20 12H4" />
+          </svg>
         </button>
         <input
           type="text"
           value={fontSize.replace('px', '')}
           onChange={(e) => handleFontSizeChange(`${e.target.value}px`)}
-          className="w-12 px-1 py-1 text-sm text-center border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-12 px-2 py-2 text-sm text-center border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
         />
         <button
           type="button"
@@ -772,66 +744,78 @@ function ComprehensiveToolbarPlugin({
               handleFontSizeChange(`${currentSize + 1}px`);
             }
           }}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 flex items-center justify-center transition-all duration-200 shadow-sm"
           title="Increase Font Size"
         >
-          +
+          <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
         </button>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
+      <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
       {/* Text formatting */}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => formatText('bold')}
-          className={`px-3 py-1 text-sm font-bold border rounded hover:bg-gray-100 ${
-            isBold ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm ${
+            isBold ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Bold (Ctrl+B)"
         >
-          B
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M6 4v2h1.5v10H6v2h6c2.2 0 4-1.8 4-4v-1c0-1.5-.8-2.8-2-3.4.6-.6 1-1.4 1-2.3V7c0-1.7-1.3-3-3-3H6zm3 2h3c.6 0 1 .4 1 1v1c0 .6-.4 1-1 1H9V6zm0 5h3.5c.8 0 1.5.7 1.5 1.5v1c0 .8-.7 1.5-1.5 1.5H9v-4z"/>
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => formatText('italic')}
-          className={`px-3 py-1 text-sm italic border rounded hover:bg-gray-100 ${
-            isItalic ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm ${
+            isItalic ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Italic (Ctrl+I)"
         >
-          I
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M10 4v3h2.21l-3.42 8H6v3h8v-3h-2.21l3.42-8H18V4h-8z"/>
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => formatText('underline')}
-          className={`px-3 py-1 text-sm underline border rounded hover:bg-gray-100 ${
-            isUnderline ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm ${
+            isUnderline ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Underline (Ctrl+U)"
         >
-          U
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M12 17c3.31 0 6-2.69 6-6V3h-2.5v8c0 1.93-1.57 3.5-3.5 3.5S8.5 12.93 8.5 11V3H6v8c0 3.31 2.69 6 6 6zm-7 2v2h14v-2H5z"/>
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => formatText('strikethrough')}
-          className={`px-3 py-1 text-sm line-through border rounded hover:bg-gray-100 ${
-            isStrikethrough ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm ${
+            isStrikethrough ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Strikethrough"
         >
-          S
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M7.24 8.75c-.26-.48-.39-1.03-.39-1.67 0-.61.13-1.16.4-1.67.26-.5.63-.93 1.11-1.29.48-.35 1.05-.63 1.7-.83.66-.19 1.39-.29 2.18-.29.81 0 1.54.11 2.21.34.66.22 1.23.54 1.69.94.47.4.83.88 1.08 1.43.25.55.38 1.15.38 1.81h-3.01c0-.31-.05-.59-.15-.85-.09-.27-.24-.49-.44-.68-.2-.19-.45-.33-.75-.44-.3-.1-.66-.16-1.06-.16-.39 0-.74.04-1.03.13-.29.09-.53.21-.72.36-.19.16-.34.34-.44.55-.1.21-.15.43-.15.66 0 .48.25.88.74 1.21.38.25.77.48 1.41.7H7.39c-.05-.08-.11-.17-.15-.26zM21 12v-2H3v2h9.62c.18.07.4.14.55.2.37.17.66.34.87.51.21.17.35.36.43.57.07.2.11.43.11.69 0 .23-.05.45-.14.66-.09.2-.23.38-.42.53-.19.15-.42.26-.71.35-.29.08-.63.13-1.01.13-.43 0-.83-.04-1.18-.13-.35-.09-.65-.22-.89-.39-.25-.17-.44-.37-.59-.62-.15-.24-.22-.5-.22-.78H12c0 .55.08 1.13.24 1.58.16.45.37.85.65 1.21.28.35.6.66.98.92.37.26.78.48 1.22.65.44.17.9.3 1.38.39.48.08.96.13 1.44.13.8 0 1.53-.09 2.18-.28.66-.19 1.23-.45 1.7-.78.47-.33.84-.73 1.1-1.2.26-.47.38-1.01.38-1.61 0-.5-.13-.98-.38-1.44-.25-.45-.59-.85-1.01-1.18-.42-.33-.93-.63-1.52-.89-.59-.25-1.25-.47-1.97-.65H21z"/>
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => formatText('code')}
-          className={`px-3 py-1 text-sm font-mono border rounded hover:bg-gray-100 ${
-            isCode ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm ${
+            isCode ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Inline Code"
         >
-          &lt;/&gt;
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
+          </svg>
         </button>
       </div>
 
@@ -840,22 +824,26 @@ function ComprehensiveToolbarPlugin({
         <button
           type="button"
           onClick={() => formatText('subscript')}
-          className={`px-2 py-1 text-xs border rounded hover:bg-gray-100 ${
-            isSubscript ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm flex items-center justify-center ${
+            isSubscript ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Subscript"
         >
-          X₂
+          <span className="text-sm font-medium">
+            X₂
+          </span>
         </button>
         <button
           type="button"
           onClick={() => formatText('superscript')}
-          className={`px-2 py-1 text-xs border rounded hover:bg-gray-100 ${
-            isSuperscript ? 'bg-blue-100 border-blue-300' : 'border-gray-300'
+          className={`p-2 border rounded-md hover:bg-gray-100 transition-all duration-200 shadow-sm flex items-center justify-center ${
+            isSuperscript ? 'bg-blue-100 border-blue-300 text-blue-700' : 'border-gray-300 text-gray-600 hover:text-gray-900'
           }`}
           title="Superscript"
         >
-          X²
+          <span className="text-sm font-medium">
+            X²
+          </span>
         </button>
       </div>
 
@@ -863,25 +851,22 @@ function ComprehensiveToolbarPlugin({
       <button
         type="button"
         onClick={clearFormatting}
-        className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+        className="p-2 border border-gray-300 rounded-md hover:bg-gray-100 text-gray-600 hover:text-gray-900 transition-all duration-200 shadow-sm"
         title="Clear Formatting"
       >
-        🗑️
+        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+        </svg>
       </button>
 
-      <div className="w-px h-6 bg-gray-300"></div>
+      <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
       {/* Colors */}
       <div className="flex items-center gap-2">
         <ColorPicker
           color={fontColor}
-          onChange={(color) => handleColorChange(color, 'color')}
+          onChange={handleColorChange}
           title="Text Color"
-        />
-        <ColorPicker
-          color={bgColor}
-          onChange={(color) => handleColorChange(color, 'background-color')}
-          title="Background Color"
         />
       </div>
 
@@ -890,7 +875,7 @@ function ComprehensiveToolbarPlugin({
       {/* Text Transformations */}
       <div className="relative">
         <select
-          className="px-3 py-1 border border-gray-300 rounded text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="px-3 py-2 border border-gray-300 rounded-md text-sm bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 shadow-sm"
           onChange={(e) => {
             const value = e.target.value;
             if (value === 'lowercase' || value === 'uppercase' || value === 'capitalize') {
@@ -907,95 +892,84 @@ function ComprehensiveToolbarPlugin({
         </select>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
+      <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
       {/* Lists */}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => insertList('bullet')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
           title="Bullet List"
         >
-          • List
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M4 10.5c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zm0-6c-.83 0-1.5.67-1.5 1.5S3.17 7.5 4 7.5 5.5 6.83 5.5 6 4.83 4.5 4 4.5zm0 12c-.83 0-1.5.67-1.5 1.5s.67 1.5 1.5 1.5 1.5-.67 1.5-1.5-.67-1.5-1.5-1.5zM8 19h12v-2H8v2zm0-6h12v-2H8v2zm0-8v2h12V5H8z"/>
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => insertList('number')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
           title="Numbered List"
         >
-          1. List
+          <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <path d="M2 17h2v.5H3v1h1v.5H2v1h3v-4H2v1zm1-9h1V4H2v1h1v3zm-1 3h1.8L2 13.1v.9h3v-1H3.2L5 10.9V10H2v1zm5-6v2h12V5H7zm0 14h12v-2H7v2zm0-6h12v-2H7v2z"/>
+          </svg>
         </button>
       </div>
 
-      <div className="w-px h-6 bg-gray-300"></div>
+      <div className="w-px h-6 bg-gray-300 mx-1"></div>
 
       {/* Alignment */}
       <div className="flex items-center gap-1">
         <button
           type="button"
           onClick={() => handleAlignment('left')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
           title="Align Left"
         >
-          ⬅️
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h8m-8 6h16" />
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => handleAlignment('center')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
           title="Align Center"
         >
-          ↔️
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M8 12h8m-8 6h16" />
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => handleAlignment('right')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
           title="Align Right"
         >
-          ➡️
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M12 12h8M4 18h16" />
+          </svg>
         </button>
         <button
           type="button"
           onClick={() => handleAlignment('justify')}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
           title="Justify"
         >
-          ⬌
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
         </button>
       </div>
 
       <div className="w-px h-6 bg-gray-300"></div>
 
-      {/* Insert Menu */}
-      <div className="flex items-center gap-1">
-        <button
-          type="button"
-          onClick={insertLink}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Insert Link"
-        >
-          🔗
-        </button>
-        <button
-          type="button"
-          onClick={insertImage}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Insert Image"
-        >
-          🖼️
-        </button>
-        <button
-          type="button"
-          onClick={insertTable}
-          className="px-2 py-1 text-sm border border-gray-300 rounded hover:bg-gray-100"
-          title="Insert Table"
-        >
-          📊
-        </button>
-      </div>
+      {/* Insert Menu - Removed Link, Image, and Table buttons per user request */}
+      {/* <div className="flex items-center gap-1">
+        Removed: 🔗 Link, 🖼️ Image, 📊 Table buttons
+      </div> */}
     </div>
   );
 }
