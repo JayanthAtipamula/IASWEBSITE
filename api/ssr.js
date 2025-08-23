@@ -5,8 +5,8 @@ module.exports = async (req, res) => {
   const url = req.url;
 
   try {
-    // Read the built HTML template
-    const templatePath = path.resolve(process.cwd(), 'dist/client/index.html');
+    // Read the built HTML template (renamed to prevent static serving)
+    const templatePath = path.resolve(process.cwd(), 'dist/client/_template.html');
     let template = fs.readFileSync(templatePath, 'utf-8');
     
     // Replace the SSR outlet with empty root div for client-side rendering

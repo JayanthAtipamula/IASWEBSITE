@@ -1,31 +1,50 @@
 {
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist/client",
-  "framework": "vite",
-  "rewrites": [
+  "version": 2,
+  "builds": [
     {
-      "source": "/api/social-logo",
-      "destination": "/api/social-logo.js"
+      "src": "api/**/*.js",
+      "use": "@vercel/node"
     },
     {
-      "source": "/api/debug-image",
-      "destination": "/api/debug-image.js"
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "dist/client"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/api/social-logo",
+      "dest": "/api/social-logo.js"
     },
     {
-      "source": "/api/images/courses/(.*)",
-      "destination": "/api/course-image/[...path].js?path=courses/$1"
+      "src": "/api/debug-image",
+      "dest": "/api/debug-image.js"
     },
     {
-      "source": "/api/course-image/(.*)",
-      "destination": "/api/course-image/[...path].js?path=$1"
+      "src": "/api/images/courses/(.*)",
+      "dest": "/api/course-image/[...path].js?path=courses/$1"
     },
     {
-      "source": "/api/images/(.*)",
-      "destination": "/api/images/[...path].js"
+      "src": "/api/course-image/(.*)",
+      "dest": "/api/course-image/[...path].js?path=$1"
     },
     {
-      "source": "/(.*)",
-      "destination": "/api/ssr"
+      "src": "/api/images/(.*)",
+      "dest": "/api/images/[...path].js"
+    },
+    {
+      "src": "/assets/(.*)",
+      "dest": "/assets/$1"
+    },
+    {
+      "src": "/favicon.png",
+      "dest": "/favicon.png"
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/api/ssr"
     }
   ]
 } 

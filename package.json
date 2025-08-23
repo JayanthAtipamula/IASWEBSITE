@@ -6,9 +6,10 @@
   "scripts": {
     "dev": "node server.js",
     "dev:client": "vite",
-    "build": "npm run build:client && npm run build:server",
+    "build": "npm run build:client && npm run build:server && npm run build:rename",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --outDir dist/server --ssr src/entry-server.tsx",
+    "build:rename": "mv dist/client/index.html dist/client/_template.html || move dist\\client\\index.html dist\\client\\_template.html",
     "start": "cross-env NODE_ENV=production node server.js",
     "lint": "eslint .",
     "preview": "vite preview"
