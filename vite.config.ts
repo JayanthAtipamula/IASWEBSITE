@@ -9,13 +9,16 @@ export default defineConfig({
     exclude: ['lucide-react'],
   },
   build: {
-    outDir: 'dist',
-    assetsDir: 'assets',
+    minify: false,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
       },
     },
+  },
+  ssr: {
+    noExternal: ['react-router-dom', 'react-helmet', 'firebase'],
+    external: ['react-quill', 'quill'],
   },
   publicDir: 'public',
 });

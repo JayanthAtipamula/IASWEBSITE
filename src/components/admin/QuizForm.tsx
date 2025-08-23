@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { X, Plus, Save, ArrowLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Quiz, QuizQuestion, QuizType, ExamBoard } from '../../services/quizService';
-import RichTextEditor from '../RichTextEditor';
+import ClientOnlyClientOnlyRichTextEditor from '../ClientOnlyClientOnlyRichTextEditor';
 
 interface QuizFormProps {
   initialData?: Partial<Quiz>;
@@ -347,7 +347,7 @@ const QuizForm: React.FC<QuizFormProps> = ({
                 >
                   Explanation (Optional)
                 </label>
-                <RichTextEditor
+                <ClientOnlyRichTextEditor
                   value={question.explanation || ''}
                   onChange={(value) => handleQuestionChange(questionIndex, 'explanation', value)}
                   placeholder="Enter explanation for this question..."

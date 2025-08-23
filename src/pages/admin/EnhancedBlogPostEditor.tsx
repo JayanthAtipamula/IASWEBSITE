@@ -3,17 +3,19 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { BlogPostFormData, Category } from '../../types/blog';
 import { createBlogPost, updateBlogPost, getBlogPost, getCategories } from '../../services/blogService';
 import { useAuth } from '../../contexts/AuthContext';
-import ClientOnlyLexicalEditor from '../../components/ClientOnlyLexicalEditor';
+import FirebaseEditor from '../../components/FirebaseEditor';
 import FeaturedImageUpload from '../../components/admin/FeaturedImageUpload';
 import LoadingScreen from '../../components/LoadingScreen';
 
-const BlogPostEditor: React.FC = () => {
+const EnhancedBlogPostEditor: React.FC = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [firebaseError, setFirebaseError] = useState<string | null>(null);
+  const [lastFirebaseSave, setLastFirebaseSave] = useState<Date | null>(null);
   const [formData, setFormData] = useState<BlogPostFormData>({
     title: '',
     content: '',
@@ -32,10 +34,14 @@ const BlogPostEditor: React.FC = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        console.log('🔄 Fetching categories and blog post data...');
+        
         const categoriesData = await getCategories();
         setCategories(categoriesData);
+        console.log(`✅ Categories loaded: ${categoriesData.length} items`);
 
         if (id) {
+          console.log(`🔍 Loading blog post with ID: ${id}`);
           const post = await getBlogPost(id);
           if (post) {
             setFormData({
@@ -53,6 +59,9 @@ const BlogPostEditor: React.FC = () => {
               currentAffairDate: post.currentAffairDate || Date.now(),
               examType: post.examType || 'upsc'
             });
+            console.log('✅ Blog post loaded successfully');
+          } else {
+            console.log('⚠️ Blog post not found');
           }
         } else {
           // Set default author for new posts
@@ -60,9 +69,11 @@ const BlogPostEditor: React.FC = () => {
             ...prev,
             author: user?.email || ''
           }));
+          console.log('✅ New post form initialized');
         }
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('❌ Error fetching data:', error);
+        setFirebaseError(`Failed to load data: ${error}`);
       } finally {
         setLoading(false);
       }
@@ -71,7 +82,6 @@ const BlogPostEditor: React.FC = () => {
     fetchData();
   }, [id, user]);
 
-  // Add this validation function
   const validateForm = (): { isValid: boolean; error?: string } => {
     if (!formData.title.trim()) {
       return { isValid: false, error: 'Title is required' };
@@ -103,6 +113,8 @@ const BlogPostEditor: React.FC = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    console.log('🚀 Starting form submission...');
+    
     // Validate form
     const validation = validateForm();
     if (!validation.isValid) {
@@ -111,14 +123,12 @@ const BlogPostEditor: React.FC = () => {
     }
     
     setSaving(true);
-    console.log("Submitting form data:", formData);
-    console.log("isCurrentAffair:", formData.isCurrentAffair);
-    console.log("isBlog:", formData.isBlog);
-    console.log("examType:", formData.examType);
-    console.log("currentAffairDate:", formData.currentAffairDate);
-    console.log("currentAffairDate as ISO string:", formData.currentAffairDate ? new Date(formData.currentAffairDate).toISOString() : 'No date set');
+    console.log("📋 Form data being submitted:", {
+      ...formData,
+      contentLength: formData.content.length
+    });
 
-    // Create submission data by copying only the necessary fields
+    // Create submission data
     let submissionData: any = {
       title: formData.title,
       content: formData.content,
@@ -139,7 +149,6 @@ const BlogPostEditor: React.FC = () => {
     if (formData.isCurrentAffair) {
       submissionData.isCurrentAffair = true;
       
-      // Make sure currentAffairDate is a valid timestamp
       if (formData.currentAffairDate) {
         submissionData.currentAffairDate = typeof formData.currentAffairDate === 'string' 
           ? new Date(formData.currentAffairDate).getTime()
@@ -148,40 +157,27 @@ const BlogPostEditor: React.FC = () => {
         submissionData.currentAffairDate = Date.now();
       }
       
-      // Make sure examType is set
       submissionData.examType = formData.examType || 'upsc';
-      
-      console.log("Current affair date timestamp:", submissionData.currentAffairDate);
-      console.log("Exam type:", submissionData.examType);
     } else {
-      // For non-current affairs, explicitly set isCurrentAffair to false
       submissionData.isCurrentAffair = false;
-      // Don't include currentAffairDate or examType fields at all
     }
 
     // Handle blog specific fields
-    if (formData.isBlog) {
-      submissionData.isBlog = true;
-    } else {
-      submissionData.isBlog = false;
-    }
-
-    console.log("Final submission data:", submissionData);
+    submissionData.isBlog = formData.isBlog;
 
     try {
       if (id) {
-        console.log("Updating existing post with ID:", id);
+        console.log(`📝 Updating existing post with ID: ${id}`);
         await updateBlogPost(id, submissionData);
-        console.log("Post updated successfully");
+        console.log('✅ Post updated successfully');
       } else {
-        console.log("Creating new post");
+        console.log('📝 Creating new post');
         const newId = await createBlogPost(submissionData);
-        console.log("New post created with ID:", newId);
+        console.log(`✅ New post created with ID: ${newId}`);
       }
       navigate('/admin/posts');
     } catch (error) {
-      console.error('Error saving post:', error);
-      // Show error message to user (you could add state for this)
+      console.error('❌ Error saving post:', error);
       alert(`Failed to save post: ${error instanceof Error ? error.message : 'Unknown error'}`);
     } finally {
       setSaving(false);
@@ -201,20 +197,42 @@ const BlogPostEditor: React.FC = () => {
     }
   };
 
-  const handleContentChange = (content: string) => {
+  // Firebase editor handlers
+  const handleFirebaseContentChange = (content: string) => {
+    console.log(`📝 Firebase content updated: ${content.length} characters`);
     setFormData(prev => ({ ...prev, content }));
+  };
+
+  const handleFirebaseTitleChange = (title: string) => {
+    console.log(`📝 Firebase title updated: "${title}"`);
+    setFormData(prev => ({ ...prev, title }));
+  };
+
+  const handleFirebaseError = (error: Error) => {
+    console.error('❌ Firebase Editor Error:', error);
+    setFirebaseError(error.message);
+  };
+
+  const handleFirebaseSaved = (data: any) => {
+    console.log('✅ Content auto-saved to Firebase:', data.id);
+    setLastFirebaseSave(new Date());
+    setFirebaseError(null);
+  };
+
+  const handleFirebaseLoaded = (data: any) => {
+    console.log('✅ Content loaded from Firebase:', data.id);
+    // Note: We don't update formData here to avoid conflicts with the main form
+    setFirebaseError(null);
   };
 
   const handleFeaturedImageChange = (imageUrl: string | null) => {
     if (imageUrl === null) {
-      // If null is passed, remove the featuredImage property
       setFormData(prev => {
         const newData = { ...prev };
         delete newData.featuredImage;
         return newData;
       });
     } else if (imageUrl && imageUrl.trim() !== '') {
-      // Only update if we have a valid string
       setFormData(prev => ({ ...prev, featuredImage: imageUrl }));
     }
   };
@@ -235,48 +253,86 @@ const BlogPostEditor: React.FC = () => {
 
   return (
     <div className="space-y-6">
+      {/* Header */}
       <div className="sm:flex sm:items-center sm:justify-between">
         <h1 className="text-2xl font-semibold text-gray-900">
           {id ? 'Edit Post' : 'Create New Post'}
+          {id && (
+            <span className="ml-2 text-sm text-gray-500">
+              (ID: {id})
+            </span>
+          )}
         </h1>
+        {lastFirebaseSave && (
+          <div className="text-sm text-green-600">
+            Auto-saved: {lastFirebaseSave.toLocaleTimeString()}
+          </div>
+        )}
       </div>
+
+      {/* Firebase Error Display */}
+      {firebaseError && (
+        <div className="bg-red-50 border border-red-200 rounded-md p-4">
+          <div className="flex">
+            <div className="flex-shrink-0">
+              <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
+                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              </svg>
+            </div>
+            <div className="ml-3">
+              <h3 className="text-sm font-medium text-red-800">Firebase Editor Error</h3>
+              <div className="mt-2 text-sm text-red-700">
+                <p>{firebaseError}</p>
+              </div>
+              <div className="mt-4">
+                <button
+                  onClick={() => setFirebaseError(null)}
+                  className="bg-red-100 px-2 py-1 rounded text-sm text-red-800 hover:bg-red-200"
+                >
+                  Dismiss
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div className="bg-white shadow px-4 py-5 sm:rounded-lg sm:p-6">
           <div className="grid grid-cols-1 gap-6">
-            <div>
-              <label htmlFor="title" className="block text-sm font-medium text-gray-700">
-                Title
-              </label>
-              <input
-                type="text"
-                name="title"
-                id="title"
-                required
-                value={formData.title}
-                onChange={handleChange}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-              />
-            </div>
-
+            
+            {/* Featured Image Upload */}
             <FeaturedImageUpload 
               initialImage={formData.featuredImage} 
               onImageUploaded={handleFeaturedImageChange} 
             />
 
+            {/* Firebase-Enabled Content Editor */}
             <div>
-              <label htmlFor="content" className="block text-sm font-medium text-gray-700 mb-1">
-                Content
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Title and Content
+                <span className="text-xs text-gray-500 ml-2">
+                  (Auto-saved to Firebase every 5 seconds)
+                </span>
               </label>
-              <div className="min-h-[200px]">
-                <ClientOnlyLexicalEditor 
-                  content={formData.content} 
-                  onChange={handleContentChange} 
-                  placeholder="Write your post content here..."
-                />
-              </div>
+              <FirebaseEditor
+                collection="blog-drafts"
+                documentId={id || `draft-${Date.now()}`}
+                autoSave={true}
+                autoSaveInterval={5000}
+                enableRealtimeSync={false}
+                showTitle={true}
+                showStatus={true}
+                placeholder="Write your post content here..."
+                onContentChange={handleFirebaseContentChange}
+                onTitleChange={handleFirebaseTitleChange}
+                onError={handleFirebaseError}
+                onSaved={handleFirebaseSaved}
+                onLoaded={handleFirebaseLoaded}
+              />
             </div>
 
+            {/* Excerpt */}
             <div>
               <label htmlFor="excerpt" className="block text-sm font-medium text-gray-700">
                 Excerpt
@@ -292,6 +348,7 @@ const BlogPostEditor: React.FC = () => {
               />
             </div>
 
+            {/* Meta Description */}
             <div>
               <label htmlFor="metaDescription" className="block text-sm font-medium text-gray-700">
                 Meta Description (for SEO)
@@ -311,6 +368,7 @@ const BlogPostEditor: React.FC = () => {
               </p>
             </div>
 
+            {/* Checkboxes for post types */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="flex items-center space-x-2">
                 <input
@@ -340,6 +398,7 @@ const BlogPostEditor: React.FC = () => {
                 </label>
               </div>
 
+              {/* Current Affairs specific fields */}
               {formData.isCurrentAffair && (
                 <>
                   <div>
@@ -377,6 +436,7 @@ const BlogPostEditor: React.FC = () => {
               )}
             </div>
 
+            {/* Categories (hidden for current affairs and blogs) */}
             <div className={formData.isCurrentAffair || formData.isBlog ? 'hidden' : ''}>
               <label htmlFor="categories" className="block text-sm font-medium text-gray-700">
                 Categories
@@ -400,6 +460,7 @@ const BlogPostEditor: React.FC = () => {
               </p>
             </div>
 
+            {/* Tags */}
             <div>
               <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
                 Tags (comma-separated)
@@ -417,6 +478,7 @@ const BlogPostEditor: React.FC = () => {
               />
             </div>
 
+            {/* Publish checkbox */}
             <div className="flex items-center">
               <input
                 type="checkbox"
@@ -433,6 +495,7 @@ const BlogPostEditor: React.FC = () => {
           </div>
         </div>
 
+        {/* Action Buttons */}
         <div className="flex justify-end space-x-3">
           <button
             type="button"
@@ -446,7 +509,7 @@ const BlogPostEditor: React.FC = () => {
             disabled={saving}
             className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
           >
-            {saving ? 'Saving...' : 'Save'}
+            {saving ? 'Saving...' : 'Save Post'}
           </button>
         </div>
       </form>
@@ -454,4 +517,4 @@ const BlogPostEditor: React.FC = () => {
   );
 };
 
-export default BlogPostEditor;
+export default EnhancedBlogPostEditor;

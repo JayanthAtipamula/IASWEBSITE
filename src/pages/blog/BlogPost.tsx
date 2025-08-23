@@ -8,6 +8,8 @@ import LoadingScreen from '../../components/LoadingScreen';
 
 // Function to update meta tags
 const updateMetaTags = (title: string, description: string, imageUrl?: string) => {
+  if (typeof document === 'undefined') return;
+  
   // Update document title
   document.title = `${title} | Epitome IAS`;
   
@@ -62,12 +64,20 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
   const [categories, setCategories] = useState<Category[]>([]);
   const [allPosts, setAllPosts] = useState<BlogPostType[]>([]);
   const [currentAffairs, setCurrentAffairs] = useState<BlogPostType[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchData = async () => {
       try {
+        setLoading(true);
         if (!slug) return;
         
         // If we're viewing a current affair with a specific exam type
@@ -134,37 +144,41 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
       } catch (error) {
         console.error('Error fetching blog post:', error);
       } finally {
-        // Add a small delay to show loading animation
         setTimeout(() => {
           setLoading(false);
         }, 800);
       }
     };
 
-    fetchData();
-    
-    // Cleanup function to reset meta tags when component unmounts
+    const timer = setTimeout(fetchData, 100);
+    return () => clearTimeout(timer);
+  }, [isClient, slug, isCurrentAffairProp, examTypeProp, dateParam]);
+
+  // Cleanup function to reset meta tags when component unmounts
+  useEffect(() => {
     return () => {
-      document.title = 'Epitome IAS';
-      
-      // Reset meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', 'Epitome IAS - Your learning partner for UPSC, TGPSC and APPSC competitive exams.');
-      }
-      
-      // Reset og tags
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) {
-        ogTitle.setAttribute('content', 'Epitome IAS');
-      }
-      
-      const ogDescription = document.querySelector('meta[property="og:description"]');
-      if (ogDescription) {
-        ogDescription.setAttribute('content', 'Epitome IAS - Your learning partner for competitive exams.');
+      if (typeof document !== 'undefined') {
+        document.title = 'Epitome IAS';
+        
+        // Reset meta description
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', 'Epitome IAS - Your learning partner for UPSC, TGPSC and APPSC competitive exams.');
+        }
+        
+        // Reset og tags
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) {
+          ogTitle.setAttribute('content', 'Epitome IAS');
+        }
+        
+        const ogDescription = document.querySelector('meta[property="og:description"]');
+        if (ogDescription) {
+          ogDescription.setAttribute('content', 'Epitome IAS - Your learning partner for competitive exams.');
+        }
       }
     };
-  }, [slug, isCurrentAffairProp, examTypeProp, dateParam]);
+  }, []);
 
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => ({
@@ -182,7 +196,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
     return format(new Date(timestamp), 'dd MMMM yyyy');
   };
 
-  if (loading) {
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) {
     return <LoadingScreen />;
   }
 

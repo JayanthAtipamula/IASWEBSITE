@@ -7,8 +7,9 @@ import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const BlogsIndex: React.FC = () => {
   const [blogs, setBlogs] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [isClient, setIsClient] = useState(false);
   
   // Pagination configuration
   const POSTS_PER_PAGE = 12;
@@ -21,9 +22,15 @@ const BlogsIndex: React.FC = () => {
   const displayedBlogs = blogs.slice(startIndex, endIndex);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchBlogs = async () => {
       try {
-        // Use the optimized blog posts function
+        setLoading(true);
         const blogPosts = await getPublishedBlogPosts();
         setBlogs(blogPosts);
       } catch (error) {
@@ -35,8 +42,9 @@ const BlogsIndex: React.FC = () => {
       }
     };
 
-    fetchBlogs();
-  }, []);
+    const timer = setTimeout(fetchBlogs, 100);
+    return () => clearTimeout(timer);
+  }, [isClient]);
 
   // Handle page changes
   const handlePageChange = (page: number) => {
@@ -78,7 +86,8 @@ const BlogsIndex: React.FC = () => {
     return pageNumbers;
   };
 
-  if (loading) {
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) {
     return <LoadingScreen />;
   }
 

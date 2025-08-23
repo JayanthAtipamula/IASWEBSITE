@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { collection, query, where, getDocs, doc, addDoc, deleteDoc, updateDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../../config/firebase';
 import { BookOpen, Edit, Trash, ChevronDown, ChevronUp, FilePlus, FolderPlus } from 'lucide-react';
-import RichTextEditor from '../../components/RichTextEditor';
+import ClientOnlyClientOnlyRichTextEditor from '../../components/ClientOnlyClientOnlyRichTextEditor';
 
 interface Chapter {
   id: string;
@@ -761,7 +761,7 @@ const MainsPYQs: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Question
                         </label>
-                        <RichTextEditor
+                        <ClientOnlyRichTextEditor
                           value={currentQuestion.question}
                           onChange={(value) => handleQuestionChange('question', value)}
                           placeholder="Enter the question..."
@@ -773,7 +773,7 @@ const MainsPYQs: React.FC = () => {
                         <label className="block text-sm font-medium text-gray-700 mb-1">
                           Answer
                         </label>
-                        <RichTextEditor
+                        <ClientOnlyRichTextEditor
                           value={currentQuestion.answer}
                           onChange={(value) => handleQuestionChange('answer', value)}
                           placeholder="Enter the answer..."

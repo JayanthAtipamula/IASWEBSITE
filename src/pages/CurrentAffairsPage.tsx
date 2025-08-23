@@ -8,10 +8,17 @@ import LoadingScreen from '../components/LoadingScreen';
 
 const CurrentAffairsPage: React.FC = () => {
   const [currentAffairs, setCurrentAffairs] = useState<BlogPost[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchCurrentAffairs = async () => {
       try {
         setLoading(true);
@@ -26,15 +33,17 @@ const CurrentAffairsPage: React.FC = () => {
       }
     };
 
-    fetchCurrentAffairs();
-  }, []);
+    const timer = setTimeout(fetchCurrentAffairs, 100);
+    return () => clearTimeout(timer);
+  }, [isClient]);
 
   const formatDate = (timestamp: number | undefined) => {
     if (!timestamp) return 'Date not available';
     return format(new Date(timestamp), 'dd MMMM yyyy');
   };
 
-  if (loading) return <LoadingScreen />;
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) return <LoadingScreen />;
 
   return (
     <div className="pt-24 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">

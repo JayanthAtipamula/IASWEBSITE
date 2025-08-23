@@ -26,6 +26,8 @@ const KNOWN_ROUTES = [
 
 // Function to update meta tags
 const updateMetaTags = (title: string, description: string, imageUrl?: string) => {
+  if (typeof document === 'undefined') return;
+  
   // Update document title
   document.title = `${title} | Epitome IAS`;
   
@@ -79,14 +81,21 @@ const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
   const [blogPost, setBlogPost] = useState<BlogPostType | null>(null);
   const [posts, setPosts] = useState<BlogPostType[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
   const [shouldRedirect, setShouldRedirect] = useState(false);
   const [redirectPath, setRedirectPath] = useState<string>('/');
   const [contentType, setContentType] = useState<'custom' | 'blog' | 'none' | 'exam'>('none');
   const [pageTitle, setPageTitle] = useState('');
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchData = async () => {
       try {
         setLoading(true);
@@ -219,30 +228,35 @@ const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
     setShouldRedirect(false);
     setError(null);
     
-    fetchData();
-    
-    // Cleanup function to reset meta tags when component unmounts
+    const timer = setTimeout(fetchData, 100);
+    return () => clearTimeout(timer);
+  }, [isClient, slug, location.pathname, isExamPage]);
+
+  // Cleanup function to reset meta tags when component unmounts
+  useEffect(() => {
     return () => {
-      document.title = 'Epitome IAS';
-      
-      // Reset meta description
-      const metaDescription = document.querySelector('meta[name="description"]');
-      if (metaDescription) {
-        metaDescription.setAttribute('content', 'Epitome IAS - Your learning partner for UPSC, TGPSC and APPSC competitive exams.');
-      }
-      
-      // Reset og tags
-      const ogTitle = document.querySelector('meta[property="og:title"]');
-      if (ogTitle) {
-        ogTitle.setAttribute('content', 'Epitome IAS');
-      }
-      
-      const ogDescription = document.querySelector('meta[property="og:description"]');
-      if (ogDescription) {
-        ogDescription.setAttribute('content', 'Epitome IAS - Your learning partner for competitive exams.');
+      if (typeof document !== 'undefined') {
+        document.title = 'Epitome IAS';
+        
+        // Reset meta description
+        const metaDescription = document.querySelector('meta[name="description"]');
+        if (metaDescription) {
+          metaDescription.setAttribute('content', 'Epitome IAS - Your learning partner for UPSC, TGPSC and APPSC competitive exams.');
+        }
+        
+        // Reset og tags
+        const ogTitle = document.querySelector('meta[property="og:title"]');
+        if (ogTitle) {
+          ogTitle.setAttribute('content', 'Epitome IAS');
+        }
+        
+        const ogDescription = document.querySelector('meta[property="og:description"]');
+        if (ogDescription) {
+          ogDescription.setAttribute('content', 'Epitome IAS - Your learning partner for competitive exams.');
+        }
       }
     };
-  }, [slug, location.pathname, isExamPage]);
+  }, []);
 
   // Function to get posts for a specific category
   const getPostsByCategory = (categoryId: string) => {
@@ -305,7 +319,8 @@ const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
     return <Navigate to={redirectPath} replace />;
   }
 
-  if (loading) {
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) {
     return <LoadingScreen />;
   }
 

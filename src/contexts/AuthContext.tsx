@@ -37,6 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // Check if user is an admin
   const checkAdminStatus = async (user: User) => {
@@ -51,6 +52,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     // Set up authentication state observer
     const unsubscribe = onAuthStateChanged(auth, 
       async (user) => {
@@ -72,7 +79,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // Cleanup subscription
     return () => unsubscribe();
-  }, []);
+  }, [isClient]);
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
@@ -158,7 +165,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     signOut
   };
 
-  if (loading) {
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) {
     return <LoadingScreen />;
   }
 

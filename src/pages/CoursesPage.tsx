@@ -10,20 +10,27 @@ const CoursesPage: React.FC = () => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [selectedExam, setSelectedExam] = useState<'all' | 'upsc' | 'tgpsc' | 'appsc'>('all');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    // Initialize with sample data for immediate rendering
+    setCourses(getSampleCourses());
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchCourses = async () => {
       try {
         setLoading(true);
         // Try to fetch courses from Firestore
         const coursesData = await getCourses();
         
-        // If no courses in Firestore, use sample data
-        if (coursesData.length === 0) {
-          setCourses(getSampleCourses());
-        } else {
+        // If courses found in Firestore, replace sample data
+        if (coursesData.length > 0) {
           setCourses(coursesData);
         }
         
@@ -34,14 +41,14 @@ const CoursesPage: React.FC = () => {
         setCourses(getSampleCourses());
         setError('Using sample data due to connection issues.');
       } finally {
-        setTimeout(() => {
-          setLoading(false);
-        }, 800);
+        setLoading(false);
       }
     };
 
-    fetchCourses();
-  }, []);
+    // Fetch real courses after component mounts on client
+    const timer = setTimeout(fetchCourses, 100);
+    return () => clearTimeout(timer);
+  }, [isClient]);
 
   // Filter courses when courses or selectedExam changes
   useEffect(() => {
@@ -68,7 +75,8 @@ const CoursesPage: React.FC = () => {
     }).format(price);
   };
 
-  if (loading) {
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) {
     return <LoadingScreen />;
   }
 

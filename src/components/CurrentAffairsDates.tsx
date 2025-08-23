@@ -14,10 +14,17 @@ interface CurrentAffairsDatesProps {
 
 const CurrentAffairsDates: React.FC<CurrentAffairsDatesProps> = ({ examType, title, color }) => {
   const [dates, setDates] = useState<{ date: number; count: number }[]>([]);
-  const [loading, setLoading] = useState<boolean>(true);
+  const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchDates = async () => {
       try {
         setLoading(true);
@@ -32,14 +39,16 @@ const CurrentAffairsDates: React.FC<CurrentAffairsDatesProps> = ({ examType, tit
       }
     };
 
-    fetchDates();
-  }, [examType]);
+    const timer = setTimeout(fetchDates, 100);
+    return () => clearTimeout(timer);
+  }, [isClient, examType]);
 
   const formatDate = (timestamp: number) => {
     return format(new Date(timestamp), 'dd MMMM yyyy');
   };
 
-  if (loading) return <LoadingScreen />;
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) return <LoadingScreen />;
 
   // Generate dynamic classes based on color prop
   const getBgColorClass = () => {

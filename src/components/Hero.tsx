@@ -8,7 +8,8 @@ import { getProxiedImageUrl } from '../utils/imageUtils';
 const Hero = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [banners, setBanners] = useState<Banner[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [isClient, setIsClient] = useState(false);
 
   // Fallback banners in case Firebase data is not available
   const fallbackBanners = [
@@ -33,6 +34,14 @@ const Hero = () => {
   ];
 
   useEffect(() => {
+    setIsClient(true);
+    // Initialize with fallback banners for immediate rendering
+    setBanners(fallbackBanners);
+  }, []);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchBanners = async () => {
       try {
         setLoading(true);
@@ -40,23 +49,19 @@ const Hero = () => {
         
         if (fetchedBanners.length > 0) {
           setBanners(fetchedBanners);
-        } else {
-          console.log('No active banners found, using fallback banners');
-          setBanners(fallbackBanners);
         }
       } catch (error) {
         console.error('Error fetching banners:', error);
-        setBanners(fallbackBanners);
+        // Keep fallback banners on error
       } finally {
-        // Add a small delay to show loading animation
-        setTimeout(() => {
-          setLoading(false);
-        }, 800);
+        setLoading(false);
       }
     };
 
-    fetchBanners();
-  }, []);
+    // Fetch real banners after component mounts on client
+    const timer = setTimeout(fetchBanners, 100);
+    return () => clearTimeout(timer);
+  }, [isClient]);
 
   useEffect(() => {
     if (banners.length === 0) return;
@@ -77,7 +82,8 @@ const Hero = () => {
     setCurrentSlide((prev) => (prev - 1 + banners.length) % banners.length);
   };
 
-  if (loading) {
+  // Don't show loading screen during SSR, only on client side
+  if (loading && isClient) {
     return <LoadingScreen />;
   }
 
