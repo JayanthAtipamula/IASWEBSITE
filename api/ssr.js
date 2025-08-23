@@ -9,17 +9,33 @@ module.exports = async (req, res) => {
     const templatePath = path.resolve(process.cwd(), 'dist/client/index.html');
     let template = fs.readFileSync(templatePath, 'utf-8');
     
-    // For now, just serve the static HTML with proper meta tags
-    // This ensures the page loads and we can add proper SSR later
+    // Replace the SSR outlet with empty root div for client-side rendering
+    // Since we're not doing full SSR yet, React will render everything client-side
+    template = template.replace('<!--ssr-outlet-->', '');
+    
+    // For different routes, we can customize meta tags
     if (url === '/' || url === '') {
-      // Add some basic meta tags for the homepage
+      // Homepage - keep existing meta tags
+      console.log('Serving homepage');
+    } else if (url.includes('/courses')) {
+      // Courses page
       template = template.replace(
         '<title>Epitome IAS Academy - Best UPSC Coaching in Hyderabad</title>',
-        `<title>Epitome IAS Academy - Best UPSC Coaching in Hyderabad</title>
-        <meta name="description" content="Join Epitome IAS Academy for comprehensive UPSC preparation with expert faculty and proven results." />
-        <meta property="og:title" content="Epitome IAS Academy - Best UPSC Coaching in Hyderabad" />
-        <meta property="og:description" content="Join Epitome IAS Academy for comprehensive UPSC preparation with expert faculty and proven results." />
-        <meta property="og:url" content="https://epitomeias.in/" />`
+        '<title>UPSC Courses - Epitome IAS Academy</title>'
+      );
+      template = template.replace(
+        '<meta name="description" content="Epitome IAS Academy provides comprehensive UPSC/IAS coaching in Hyderabad. Expert faculty, quality study materials, and personalized mentoring for civil services exam preparation." />',
+        '<meta name="description" content="Explore comprehensive UPSC courses at Epitome IAS Academy. Prelims, Mains, Interview preparation with expert guidance." />'
+      );
+    } else if (url.includes('/current-affairs')) {
+      // Current Affairs page
+      template = template.replace(
+        '<title>Epitome IAS Academy - Best UPSC Coaching in Hyderabad</title>',
+        '<title>Current Affairs - Epitome IAS Academy</title>'
+      );
+      template = template.replace(
+        '<meta name="description" content="Epitome IAS Academy provides comprehensive UPSC/IAS coaching in Hyderabad. Expert faculty, quality study materials, and personalized mentoring for civil services exam preparation." />',
+        '<meta name="description" content="Stay updated with latest current affairs for UPSC preparation. Daily, weekly, and monthly current affairs coverage." />'
       );
     }
 
@@ -30,7 +46,7 @@ module.exports = async (req, res) => {
   } catch (error) {
     console.error('SSR Error:', error);
     
-    // Fallback HTML
+    // Fallback HTML with proper asset paths
     const fallbackHtml = `
 <!DOCTYPE html>
 <html lang="en">
@@ -39,11 +55,14 @@ module.exports = async (req, res) => {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Epitome IAS Academy - Best UPSC Coaching in Hyderabad</title>
     <meta name="description" content="Epitome IAS Academy provides comprehensive UPSC/IAS coaching in Hyderabad. Expert faculty, quality study materials, and personalized mentoring for civil services exam preparation." />
+    <link rel="icon" type="image/png" href="/favicon.png" />
 </head>
 <body>
     <div id="root"></div>
-    <script type="module" crossorigin src="/assets/index.js"></script>
-    <link rel="stylesheet" href="/assets/index.css">
+    <script>
+      console.log('Loading fallback content...');
+      // This will be handled by client-side rendering when assets load
+    </script>
 </body>
 </html>`;
     
