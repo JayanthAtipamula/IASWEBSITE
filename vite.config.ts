@@ -9,6 +9,14 @@ export default defineConfig({
   },
   build: {
     minify: false,
+    rollupOptions: {
+      input: {
+        main: './index.html',
+      },
+    },
   },
   publicDir: 'public',
+  ssr: {
+    noExternal: ['react-helmet'],
+  },
 });

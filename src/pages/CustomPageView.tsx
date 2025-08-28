@@ -21,7 +21,8 @@ const KNOWN_ROUTES = [
   'category', 
   'admin', 
   'pages',
-  'courses'
+  'courses',
+  'blogs'
 ];
 
 // Function to update meta tags

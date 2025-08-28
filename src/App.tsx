@@ -67,7 +67,11 @@ import RefundPolicy from './pages/RefundPolicy';
 import PaperSelectionPage from './pages/pyqs/PaperSelectionPage';
 import MainsPaperSelectionPage from './pages/pyqs/MainsPaperSelectionPage';
 
-const App = () => {
+interface AppProps {
+  initialData?: any;
+}
+
+const App: React.FC<AppProps> = ({ initialData }) => {
   return (
     <AuthProvider>
       <div className="min-h-screen bg-gray-50">
@@ -141,7 +145,7 @@ const App = () => {
           
           {/* Blog Routes */}
           <Route path="/blogs" element={<BlogsIndex />} />
-          <Route path="/blogs/:slug" element={<BlogPost isBlog={true} />} />
+          <Route path="/blogs/:slug" element={<BlogPost isBlog={true} initialData={initialData} />} />
           
           {/* Exam Specific Notes Routes */}
           <Route path="/upsc-notes" element={<CustomPageView isExamPage="upsc" />} />
@@ -191,7 +195,7 @@ const App = () => {
           {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
           <Route path="/:slug" element={<CustomPageView />} />
           
-          {/* Catch-all route */}
+          {/* Catch-all route - MUST be last */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
         <Footer />

@@ -6,9 +6,10 @@ import { BlogPost as BlogPostType, Category } from '../../types/blog';
 import { ChevronDown, ChevronUp, CalendarDays } from 'lucide-react';
 import LoadingScreen from '../../components/LoadingScreen';
 
-// Function to update meta tags
+// Function to update meta tags - SSR compatible
 const updateMetaTags = (title: string, description: string, imageUrl?: string) => {
-  if (typeof document === 'undefined') return;
+  // Only run on client side
+  if (typeof window === 'undefined') return;
   
   // Update document title
   document.title = `${title} | Epitome IAS`;
@@ -56,9 +57,10 @@ interface BlogPostProps {
   isCurrentAffair?: boolean;
   isBlog?: boolean;
   examType?: 'upsc' | 'tgpsc' | 'appsc';
+  initialData?: any;
 }
 
-const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairProp, isBlog: isBlogProp, examType: examTypeProp }) => {
+const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairProp, isBlog: isBlogProp, examType: examTypeProp, initialData }) => {
   const { slug, dateParam } = useParams<{ slug: string; dateParam?: string }>();
   const [post, setPost] = useState<BlogPostType | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -68,9 +70,38 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [isClient, setIsClient] = useState(false);
 
+
+
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    
+    // Use initial data from SSR if available
+    if (initialData && initialData.post) {
+      
+      setPost(initialData.post);
+      setCategories(initialData.categories || []);
+      setAllPosts(initialData.allPosts || []);
+      setCurrentAffairs(initialData.currentAffairs || []);
+      
+      // Initialize expanded state for the categories
+      if (initialData.post.categories) {
+        const initialExpandedState: Record<string, boolean> = {};
+        initialData.post.categories.forEach((catId: string) => {
+          initialExpandedState[catId] = true;
+        });
+        setExpandedCategories(initialExpandedState);
+      }
+      
+      // Update meta tags
+      updateMetaTags(
+        initialData.post.title,
+        initialData.post.excerpt || 'Read this informative article from Epitome IAS',
+        initialData.post.featuredImage
+      );
+      
+      setLoading(false);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (!isClient) return;
@@ -157,7 +188,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
   // Cleanup function to reset meta tags when component unmounts
   useEffect(() => {
     return () => {
-      if (typeof document !== 'undefined') {
+      if (typeof window !== 'undefined') {
         document.title = 'Epitome IAS';
         
         // Reset meta description
@@ -196,7 +227,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
     return format(new Date(timestamp), 'dd MMMM yyyy');
   };
 
-  // Don't show loading screen during SSR, only on client side
+  // Show loading screen only on client side after hydration
   if (loading && isClient) {
     return <LoadingScreen />;
   }
