@@ -249,20 +249,39 @@ export async function render(url: string) {
     // Handle custom pages at root level
     else if (url !== '/' && !url.startsWith('/admin') && !url.startsWith('/login') && !url.startsWith('/profile')) {
       const slug = url.substring(1); // Remove leading slash
-      console.log('SSR: Processing custom page with slug:', slug);
+      console.log('SSR: Processing root-level route with slug:', slug);
       
       try {
-        const page = await getCustomPageBySlugServer(slug);
+        // First check if there's a post with this slug
+        const post = await getBlogPostBySlugServer(slug);
         
-        if (page) {
+        if (post) {
+          console.log('SSR: Found post with slug:', slug);
+          const categories = await getCategoriesServer();
+          const allPosts = await getPublishedPostsServer();
+          
           initialData = {
-            page,
+            post,
+            categories,
+            allPosts,
             slug,
-            pageType: 'customPage'
+            pageType: 'post'
           };
+        } else {
+          // If no post found, check for custom page
+          console.log('SSR: No post found, checking for custom page');
+          const page = await getCustomPageBySlugServer(slug);
+          
+          if (page) {
+            initialData = {
+              page,
+              slug,
+              pageType: 'customPage'
+            };
+          }
         }
       } catch (error) {
-        console.error('SSR: Error fetching custom page data:', error);
+        console.error('SSR: Error fetching data for root-level route:', error);
       }
     }
     
@@ -295,7 +314,7 @@ export async function render(url: string) {
         </StaticRouter>
       </StrictMode>
     );
-    
+
     return { html, initialData };
   } catch (error) {
     console.error('SSR: Render failed:', error);

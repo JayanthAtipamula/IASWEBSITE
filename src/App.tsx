@@ -134,13 +134,13 @@ const App: React.FC<AppProps> = ({ initialData }) => {
           <Route path="/current-affairs/appsc/:dateParam" element={<APPSCCurrentAffairsDetailPage initialData={initialData} />} />
           
           {/* Current Affairs Article Routes */}
-          <Route path="/current-affairs/upsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="upsc" />} />
-          <Route path="/current-affairs/tgpsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="tgpsc" />} />
-          <Route path="/current-affairs/appsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="appsc" />} />
+                  <Route path="/current-affairs/upsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="upsc" initialData={initialData} />} />
+        <Route path="/current-affairs/tgpsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="tgpsc" initialData={initialData} />} />
+        <Route path="/current-affairs/appsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="appsc" initialData={initialData} />} />
           
           {/* Notes Routes */}
           <Route path="/notes" element={<BlogIndex />} />
-          <Route path="/notes/:slug" element={<BlogPost />} />
+          <Route path="/notes/:slug" element={<BlogPost initialData={initialData} />} />
           <Route path="/category/:categorySlug" element={<CategoryPage />} />
           
           {/* Blog Routes */}
@@ -193,7 +193,7 @@ const App: React.FC<AppProps> = ({ initialData }) => {
           <Route path="/appsc-mains-pyqs" element={<Navigate to="/pyqs/mains/appsc" replace />} />
           
           {/* Custom Pages & Blog Posts at Root Level - Must be after all other routes */}
-          <Route path="/:slug" element={<CustomPageView />} />
+          <Route path="/:slug" element={<CustomPageView initialData={initialData} />} />
           
           {/* Catch-all route - MUST be last */}
           <Route path="*" element={<Navigate to="/" replace />} />

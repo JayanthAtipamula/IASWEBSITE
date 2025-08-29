@@ -73,9 +73,10 @@ const updateMetaTags = (title: string, description: string, imageUrl?: string) =
 
 interface CustomPageViewProps {
   isExamPage?: 'upsc' | 'appsc' | 'tgpsc';
+  initialData?: any;
 }
 
-const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
+const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage, initialData }) => {
   const { slug } = useParams<{ slug: string }>();
   const location = useLocation();
   const [page, setPage] = useState<CustomPage | null>(null);
@@ -93,6 +94,39 @@ const CustomPageView: React.FC<CustomPageViewProps> = ({ isExamPage }) => {
   useEffect(() => {
     setIsClient(true);
   }, []);
+
+  // Use initial data from SSR if available
+  useEffect(() => {
+    if (initialData) {
+      if (initialData.page) {
+        console.log('CustomPageView: Using SSR data for custom page:', initialData.page.title);
+        setPage(initialData.page);
+        setContentType('custom');
+        setPageTitle(initialData.page.title);
+        setLoading(false);
+        
+        // Update meta tags
+        updateMetaTags(
+          initialData.page.title,
+          initialData.page.description || 'Custom page from Epitome IAS'
+        );
+      } else if (initialData.post) {
+        console.log('CustomPageView: Using SSR data for post:', initialData.post.title);
+        setBlogPost(initialData.post);
+        setPosts(initialData.allPosts || []);
+        setCategories(initialData.categories || []);
+        setContentType('blog');
+        setPageTitle(initialData.post.title);
+        setLoading(false);
+        
+        // Update meta tags
+        updateMetaTags(
+          initialData.post.title,
+          initialData.post.excerpt || 'Read this informative article from Epitome IAS'
+        );
+      }
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (!isClient) return;

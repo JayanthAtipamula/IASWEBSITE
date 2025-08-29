@@ -69,6 +69,8 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
   const [loading, setLoading] = useState(false);
   const [expandedCategories, setExpandedCategories] = useState<Record<string, boolean>>({});
   const [isClient, setIsClient] = useState(false);
+  const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [isScrolling, setIsScrolling] = useState(false);
 
 
 
@@ -211,6 +213,27 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
     };
   }, []);
 
+  // Handle scroll to hide/show floating button
+  useEffect(() => {
+    if (!isClient) return;
+
+    let scrollTimer: NodeJS.Timeout;
+    
+    const handleScroll = () => {
+      setIsScrolling(true);
+      clearTimeout(scrollTimer);
+      scrollTimer = setTimeout(() => {
+        setIsScrolling(false);
+      }, 150);
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      clearTimeout(scrollTimer);
+    };
+  }, [isClient]);
+
   const toggleCategory = (categoryId: string) => {
     setExpandedCategories(prev => ({
       ...prev,
@@ -287,7 +310,6 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
               </div>
             ) : (
               <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200 sticky top-24">
-                <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
                 <div className="space-y-2">
                   {categories
                     .filter(category => post.categories.includes(category.id))
@@ -393,82 +415,125 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
             </div>
           </article>
           
-          {/* Mobile sidebar (visible only on mobile) */}
+          {/* Mobile sidebar (sliding side menu) */}
           {!(isBlogProp || post.isBlog) && (
-            <div className="mt-8 lg:hidden">
-              <div className="bg-white rounded-lg shadow-md p-4 border border-gray-200">
-                {isCurrentAffair ? (
-                  <>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Affairs</h2>
-                    <div className="space-y-3">
-                      {currentAffairs.map((affair) => (
-                        <Link 
-                          key={affair.id}
-                          to={affair.examType ? 
-                            `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
-                            `/notes/${affair.slug}`
-                          }
-                          className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
-                            affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
-                          }`}
-                        >
-                          <div className="flex items-center text-sm text-gray-500 mb-1">
-                            <CalendarDays className="w-4 h-4 mr-1" />
-                            <span>{formatDate(affair.currentAffairDate)}</span>
-                          </div>
-                          <h3 className={`text-sm font-medium ${
-                            affair.id === post.id ? 'text-blue-600' : 'text-gray-800'
-                          }`}>
-                            {affair.title}
-                          </h3>
-                        </Link>
-                      ))}
-                    </div>
-                  </>
-                ) : (
-                  <>
-                    <h2 className="text-xl font-semibold text-gray-900 mb-4">Categories</h2>
-                    <div className="space-y-2">
-                      {categories
-                        .filter(category => post.categories.includes(category.id))
-                        .map((category) => (
-                        <div key={category.id} className="border-b border-gray-100 pb-2">
-                          <button
-                            onClick={() => toggleCategory(category.id)}
-                            className="flex items-center justify-between w-full text-left px-2 py-2 rounded-md hover:bg-gray-50"
+            <>
+              {/* Backdrop overlay */}
+              {mobileSidebarOpen && (
+                <div 
+                  className="lg:hidden fixed inset-0 bg-black bg-opacity-50 z-40"
+                  onClick={() => setMobileSidebarOpen(false)}
+                />
+              )}
+              
+              {/* Mobile sidebar */}
+              <div className={`lg:hidden fixed left-0 top-0 h-full w-80 bg-white shadow-lg border-r border-gray-200 z-50 overflow-y-auto transform transition-transform duration-300 ease-in-out ${
+                mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full'
+              }`}>
+                <div className="p-4 pt-24">
+                  {/* Close button */}
+                  <button
+                    onClick={() => setMobileSidebarOpen(false)}
+                    className="absolute top-4 right-4 text-gray-500 hover:text-gray-700 p-2 rounded-full hover:bg-gray-100 transition-colors"
+                  >
+                    <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                    </svg>
+                  </button>
+                  
+                  {isCurrentAffair ? (
+                    <>
+                      <h2 className="text-xl font-semibold text-gray-900 mb-4">Current Affairs</h2>
+                      <div className="space-y-3">
+                        {currentAffairs.map((affair) => (
+                          <Link 
+                            key={affair.id}
+                            to={affair.examType ? 
+                              `/current-affairs/${affair.examType}/${affair.currentAffairDate}/${affair.slug}` : 
+                              `/notes/${affair.slug}`
+                            }
+                            className={`block p-3 border border-gray-100 rounded-md hover:bg-gray-50 transition-colors ${
+                              affair.id === post.id ? 'bg-blue-50 border-blue-200' : ''
+                            }`}
+                            onClick={() => setMobileSidebarOpen(false)}
                           >
-                            <span className="font-medium text-gray-800">{category.name}</span>
-                            {expandedCategories[category.id] ? (
-                              <ChevronUp className="h-4 w-4 text-gray-500" />
-                            ) : (
-                              <ChevronDown className="h-4 w-4 text-gray-500" />
-                            )}
-                          </button>
-                          
-                          {expandedCategories[category.id] && (
-                            <div className="mt-1 ml-4 space-y-1">
-                              {getPostsByCategory(category.id).map((categoryPost) => (
-                                <Link
-                                  key={categoryPost.id}
-                                  to={`/notes/${categoryPost.slug}`}
-                                  className={`block py-1 text-sm ${
-                                    categoryPost.id === post.id
-                                      ? 'text-blue-600 font-medium'
-                                      : 'text-gray-600 hover:text-blue-600'
-                                  }`}
-                                >
-                                  {categoryPost.title}
-                                </Link>
-                              ))}
+                            <div className="flex items-center text-sm text-gray-500 mb-1">
+                              <CalendarDays className="w-4 h-4 mr-1" />
+                              <span>{formatDate(affair.currentAffairDate)}</span>
                             </div>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  </>
-                )}
+                            <h3 className={`text-sm font-medium ${
+                              affair.id === post.id ? 'text-blue-600' : 'text-gray-800'
+                            }`}>
+                              {affair.title}
+                            </h3>
+                          </Link>
+                        ))}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <div className="space-y-2">
+                        {categories
+                          .filter(category => post.categories.includes(category.id))
+                          .map((category) => (
+                          <div key={category.id} className="border-b border-gray-100 pb-2">
+                            <button
+                              onClick={() => toggleCategory(category.id)}
+                              className="flex items-center justify-between w-full text-left px-2 py-2 rounded-md hover:bg-gray-50"
+                            >
+                              <span className="font-medium text-gray-800">{category.name}</span>
+                              {expandedCategories[category.id] ? (
+                                <ChevronUp className="h-4 w-4 text-gray-500" />
+                              ) : (
+                                <ChevronDown className="h-4 w-4 text-gray-500" />
+                              )}
+                            </button>
+                            
+                            {expandedCategories[category.id] && (
+                              <div className="mt-1 ml-4 space-y-1">
+                                {getPostsByCategory(category.id).map((categoryPost) => (
+                                  <Link
+                                    key={categoryPost.id}
+                                    to={`/notes/${categoryPost.slug}`}
+                                    className={`block py-1 text-sm ${
+                                      categoryPost.id === post.id
+                                        ? 'text-blue-600 font-medium'
+                                        : 'text-gray-600 hover:text-blue-600'
+                                    }`}
+                                    onClick={() => setMobileSidebarOpen(false)}
+                                  >
+                                    {categoryPost.title}
+                                  </Link>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
-            </div>
+            </>
+          )}
+          
+          {/* Floating action button to open mobile sidebar */}
+          {!(isBlogProp || post.isBlog) && (
+            <button
+              onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
+              className={`lg:hidden fixed top-1/2 left-6 -translate-y-1/2 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 z-50 ${
+                isScrolling ? 'opacity-0 pointer-events-none' : 'opacity-100'
+              }`}
+            >
+              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round" 
+                  strokeWidth={2} 
+                  d={mobileSidebarOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} 
+                />
+              </svg>
+            </button>
           )}
         </div>
       </div>

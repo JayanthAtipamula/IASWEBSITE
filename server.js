@@ -71,6 +71,75 @@ async function createServer() {
         });
       }
     });
+
+    // Test custom page data fetching
+    app.get('/test-custom-page/:slug', async (req, res) => {
+      try {
+        const { getCustomPageBySlugServer } = await vite.ssrLoadModule('./src/services/pageService-server.ts');
+        const page = await getCustomPageBySlugServer(req.params.slug);
+        
+        res.json({
+          success: true,
+          slug: req.params.slug,
+          pageFound: !!page,
+          page: page ? {
+            id: page.id,
+            title: page.title,
+            slug: page.slug,
+            published: page.published
+          } : null
+        });
+      } catch (error) {
+        console.error('Custom page test error:', error);
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
+
+    // Test database collections
+    app.get('/test-collections', async (req, res) => {
+      try {
+        const { adminDb } = await vite.ssrLoadModule('./src/config/firebase-admin.ts');
+        
+        // Check custom_pages collection
+        const customPagesRef = adminDb.collection('custom_pages');
+        const customPagesSnapshot = await customPagesRef.limit(5).get();
+        
+        // Check posts collection
+        const postsRef = adminDb.collection('posts');
+        const postsSnapshot = await postsRef.limit(5).get();
+        
+        res.json({
+          success: true,
+          customPages: {
+            count: customPagesSnapshot.size,
+            samples: customPagesSnapshot.docs.map(doc => ({
+              id: doc.id,
+              title: doc.data().title,
+              slug: doc.data().slug,
+              published: doc.data().published
+            }))
+          },
+          posts: {
+            count: postsSnapshot.size,
+            samples: postsSnapshot.docs.map(doc => ({
+              id: doc.id,
+              title: doc.data().title,
+              slug: doc.data().slug,
+              published: doc.data().published
+            }))
+          }
+        });
+      } catch (error) {
+        console.error('Collections test error:', error);
+        res.status(500).json({
+          success: false,
+          error: error.message
+        });
+      }
+    });
   } else {
     // In production, use the built assets
     const { default: sirv } = await import('sirv');
