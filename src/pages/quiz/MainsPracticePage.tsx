@@ -9,7 +9,11 @@ interface QuizWithDate extends Omit<Quiz, 'createdAt'> {
   createdAt: Date;
 }
 
-const MainsPracticePage: React.FC = () => {
+interface MainsPracticePageProps {
+  initialData?: any;
+}
+
+const MainsPracticePage: React.FC<MainsPracticePageProps> = ({ initialData }) => {
   const [quizzes, setQuizzes] = useState<QuizWithDate[]>([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState<QuizWithDate[]>([]);
   const [loading, setLoading] = useState(true);
@@ -17,9 +21,33 @@ const MainsPracticePage: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [isClient, setIsClient] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setIsClient(true);
+    
+    // Use initial data from SSR if available
+    if (initialData && initialData.quizzes) {
+      const mainsQuizzes = initialData.quizzes.filter((quiz: any) => 
+        quiz.quizType === 'mainsPractice' && quiz.examBoard === 'upsc'
+      );
+      const quizData: QuizWithDate[] = mainsQuizzes.map((quiz: any) => ({
+        ...quiz,
+        createdAt: quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt)
+      }));
+      setQuizzes(quizData);
+      setFilteredQuizzes(quizData);
+      setLoading(false);
+    }
+  }, [initialData]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    // Skip fetching if we already have SSR data
+    if (initialData && initialData.quizzes) return;
+
     const fetchQuizzes = async () => {
       try {
         const q = query(
@@ -52,27 +80,41 @@ const MainsPracticePage: React.FC = () => {
     };
 
     fetchQuizzes();
-  }, []);
+  }, [isClient, initialData]);
 
+  // Filter quizzes based on selected date range
   useEffect(() => {
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const weekAgo = new Date(today);
-    weekAgo.setDate(weekAgo.getDate() - 7);
-    const monthAgo = new Date(today);
-    monthAgo.setMonth(monthAgo.getMonth() - 1);
+    if (quizzes.length === 0) return;
 
+    const now = new Date();
     let filtered = [...quizzes];
-    
+
     switch (dateFilter) {
       case 'today':
-        filtered = quizzes.filter(quiz => quiz.createdAt >= today);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        filtered = quizzes.filter(quiz => {
+          const quizDate = quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt);
+          return quizDate >= today;
+        });
         break;
       case 'week':
-        filtered = quizzes.filter(quiz => quiz.createdAt >= weekAgo);
+        const weekAgo = new Date();
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        weekAgo.setHours(0, 0, 0, 0);
+        filtered = quizzes.filter(quiz => {
+          const quizDate = quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt);
+          return quizDate >= weekAgo;
+        });
         break;
       case 'month':
-        filtered = quizzes.filter(quiz => quiz.createdAt >= monthAgo);
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        monthAgo.setHours(0, 0, 0, 0);
+        filtered = quizzes.filter(quiz => {
+          const quizDate = quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt);
+          return quizDate >= monthAgo;
+        });
         break;
       case 'custom':
         // Custom date range filtering
@@ -83,24 +125,31 @@ const MainsPracticePage: React.FC = () => {
           toDateTime.setHours(23, 59, 59, 999);
           
           filtered = quizzes.filter(quiz => {
-            return quiz.createdAt >= fromDateTime && quiz.createdAt <= toDateTime;
+            const quizDate = quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt);
+            return quizDate >= fromDateTime && quizDate <= toDateTime;
           });
         } else if (fromDate) {
           const fromDateTime = new Date(fromDate);
           fromDateTime.setHours(0, 0, 0, 0);
-          filtered = quizzes.filter(quiz => quiz.createdAt >= fromDateTime);
+          filtered = quizzes.filter(quiz => {
+            const quizDate = quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt);
+            return quizDate >= fromDateTime;
+          });
         } else if (toDate) {
           const toDateTime = new Date(toDate);
           toDateTime.setHours(23, 59, 59, 999);
-          filtered = quizzes.filter(quiz => quiz.createdAt <= toDateTime);
+          filtered = quizzes.filter(quiz => {
+            const quizDate = quiz.createdAt instanceof Timestamp ? quiz.createdAt.toDate() : new Date(quiz.createdAt);
+            return quizDate <= toDateTime;
+          });
         }
         break;
       default:
         filtered = quizzes;
     }
-    
+
     setFilteredQuizzes(filtered);
-  }, [dateFilter, quizzes, fromDate, toDate]);
+  }, [quizzes, dateFilter, fromDate, toDate]);
 
   const handleQuizClick = (quizId: string) => {
     navigate(`/quiz/${quizId}`);

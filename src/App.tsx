@@ -100,7 +100,7 @@ const App: React.FC<AppProps> = ({ initialData }) => {
           } />
           
           {/* Quiz Routes */}
-          <Route path="/quizzes" element={<QuizListPage />} />
+          <Route path="/quizzes" element={<QuizListPage initialData={initialData} />} />
           <Route path="/quiz/:quizId" element={
             <ProtectedRoute requireAdmin={false}>
               <QuizPage />
@@ -108,30 +108,30 @@ const App: React.FC<AppProps> = ({ initialData }) => {
           } />
           
           {/* PYQs Routes */}
-          <Route path="/pyqs/prelims/:examType" element={<PaperSelectionPage />} />
+          <Route path="/pyqs/prelims/:examType" element={<PaperSelectionPage initialData={initialData} />} />
           <Route path="/pyqs/prelims/:examType/paper/:paperId" element={<PYQSPrelimsPage />} />
-          <Route path="/pyqs/mains/:examType" element={<MainsPaperSelectionPage />} />
+          <Route path="/pyqs/mains/:examType" element={<MainsPaperSelectionPage initialData={initialData} />} />
           <Route path="/pyqs/mains/:examType/paper/:paperId" element={<MainsPage />} />
           
           {/* Quiz Practice Routes */}
-          <Route path="/prelims-practice" element={<PrelimsPracticePage />} />
-          <Route path="/mains-practice" element={<MainsPracticePage />} />
-          <Route path="/tgpsc-prelims-practice" element={<TGPSCPrelimsPracticePage />} />
-          <Route path="/tgpsc-mains-practice" element={<TGPSCMainsPracticePage />} />
-          <Route path="/appsc-prelims-practice" element={<APPSCPrelimsPracticePage />} />
-          <Route path="/appsc-mains-practice" element={<APPSCMainsPracticePage />} />
+          <Route path="/prelims-practice" element={<PrelimsPracticePage initialData={initialData} />} />
+          <Route path="/mains-practice" element={<MainsPracticePage initialData={initialData} />} />
+          <Route path="/tgpsc-prelims-practice" element={<TGPSCPrelimsPracticePage initialData={initialData} />} />
+          <Route path="/tgpsc-mains-practice" element={<TGPSCMainsPracticePage initialData={initialData} />} />
+          <Route path="/appsc-prelims-practice" element={<APPSCPrelimsPracticePage initialData={initialData} />} />
+          <Route path="/appsc-mains-practice" element={<APPSCMainsPracticePage initialData={initialData} />} />
           
           {/* Courses Route */}
-          <Route path="/courses" element={<CoursesPage />} />
+          <Route path="/courses" element={<CoursesPage initialData={initialData} />} />
           
           {/* Current Affairs Routes */}
-          <Route path="/current-affairs" element={<CurrentAffairsPage />} />
-          <Route path="/current-affairs/upsc" element={<UPSCCurrentAffairsPage />} />
-          <Route path="/current-affairs/tgpsc" element={<TGPSCCurrentAffairsPage />} />
-          <Route path="/current-affairs/appsc" element={<APPSCCurrentAffairsPage />} />
-          <Route path="/current-affairs/upsc/:dateParam" element={<UPSCCurrentAffairsDetailPage />} />
-          <Route path="/current-affairs/tgpsc/:dateParam" element={<TGPSCCurrentAffairsDetailPage />} />
-          <Route path="/current-affairs/appsc/:dateParam" element={<APPSCCurrentAffairsDetailPage />} />
+          <Route path="/current-affairs" element={<CurrentAffairsPage initialData={initialData} />} />
+          <Route path="/current-affairs/upsc" element={<UPSCCurrentAffairsPage initialData={initialData} />} />
+          <Route path="/current-affairs/tgpsc" element={<TGPSCCurrentAffairsPage initialData={initialData} />} />
+          <Route path="/current-affairs/appsc" element={<APPSCCurrentAffairsPage initialData={initialData} />} />
+          <Route path="/current-affairs/upsc/:dateParam" element={<UPSCCurrentAffairsDetailPage initialData={initialData} />} />
+          <Route path="/current-affairs/tgpsc/:dateParam" element={<TGPSCCurrentAffairsDetailPage initialData={initialData} />} />
+          <Route path="/current-affairs/appsc/:dateParam" element={<APPSCCurrentAffairsDetailPage initialData={initialData} />} />
           
           {/* Current Affairs Article Routes */}
           <Route path="/current-affairs/upsc/:dateParam/:slug" element={<BlogPost isCurrentAffair={true} examType="upsc" />} />

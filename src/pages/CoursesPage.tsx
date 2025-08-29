@@ -6,7 +6,11 @@ import LoadingScreen from '../components/LoadingScreen';
 import { getProxiedImageUrl } from '../utils/imageUtils';
 import CourseImage from '../components/CourseImage';
 
-const CoursesPage: React.FC = () => {
+interface CoursesPageProps {
+  initialData?: any;
+}
+
+const CoursesPage: React.FC<CoursesPageProps> = ({ initialData }) => {
   const [courses, setCourses] = useState<Course[]>([]);
   const [filteredCourses, setFilteredCourses] = useState<Course[]>([]);
   const [selectedExam, setSelectedExam] = useState<'all' | 'upsc' | 'tgpsc' | 'appsc'>('all');
@@ -16,12 +20,22 @@ const CoursesPage: React.FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-    // Initialize with sample data for immediate rendering
-    setCourses(getSampleCourses());
-  }, []);
+    
+    // Use initial data from SSR if available
+    if (initialData && initialData.courses) {
+      setCourses(initialData.courses);
+      setLoading(false);
+    } else {
+      // Initialize with sample data for immediate rendering
+      setCourses(getSampleCourses());
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (!isClient) return;
+
+    // Skip fetching if we already have SSR data
+    if (initialData && initialData.courses) return;
 
     const fetchCourses = async () => {
       try {
@@ -48,7 +62,7 @@ const CoursesPage: React.FC = () => {
     // Fetch real courses after component mounts on client
     const timer = setTimeout(fetchCourses, 100);
     return () => clearTimeout(timer);
-  }, [isClient]);
+  }, [isClient, initialData]);
 
   // Filter courses when courses or selectedExam changes
   useEffect(() => {

@@ -5,7 +5,11 @@ import { db } from '../../config/firebase';
 import { Quiz } from '../../services/quizService';
 import { Calendar, Filter } from 'lucide-react';
 
-const APPSCMainsPracticePage: React.FC = () => {
+interface APPSCMainsPracticePageProps {
+  initialData?: any;
+}
+
+const APPSCMainsPracticePage: React.FC<APPSCMainsPracticePageProps> = ({ initialData }) => {
   const [quizzes, setQuizzes] = useState<Quiz[]>([]);
   const [filteredQuizzes, setFilteredQuizzes] = useState<Quiz[]>([]);
   const [loading, setLoading] = useState(true);
@@ -13,9 +17,29 @@ const APPSCMainsPracticePage: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<string>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [isClient, setIsClient] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
+    setIsClient(true);
+    
+    // Use initial data from SSR if available
+    if (initialData && initialData.quizzes) {
+      const appscQuizzes = initialData.quizzes.filter((quiz: Quiz) => 
+        quiz.quizType === 'mainsPractice' && quiz.examBoard === 'appsc'
+      );
+      setQuizzes(appscQuizzes);
+      setFilteredQuizzes(appscQuizzes);
+      setLoading(false);
+    }
+  }, [initialData]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
+    // Skip fetching if we already have SSR data
+    if (initialData && initialData.quizzes) return;
+
     const fetchQuizzes = async () => {
       try {
         // Query quizzes with quizType = 'mainsPractice' and examBoard = 'appsc'
@@ -43,7 +67,7 @@ const APPSCMainsPracticePage: React.FC = () => {
     };
 
     fetchQuizzes();
-  }, []);
+  }, [isClient, initialData]);
 
   // Filter quizzes based on selected date range
   useEffect(() => {

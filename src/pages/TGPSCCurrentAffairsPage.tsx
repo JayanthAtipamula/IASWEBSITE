@@ -1,12 +1,17 @@
 import React from 'react';
 import CurrentAffairsDates from '../components/CurrentAffairsDates';
 
-const TGPSCCurrentAffairsPage: React.FC = () => {
+interface TGPSCCurrentAffairsPageProps {
+  initialData?: any;
+}
+
+const TGPSCCurrentAffairsPage: React.FC<TGPSCCurrentAffairsPageProps> = ({ initialData }) => {
   return (
     <CurrentAffairsDates 
       examType="tgpsc" 
       title="TGPSC Current Affairs" 
-      color="green" 
+      color="green"
+      initialData={initialData}
     />
   );
 };

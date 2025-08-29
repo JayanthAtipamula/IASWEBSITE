@@ -6,7 +6,11 @@ import { BlogPost } from '../types/blog';
 import { getCurrentAffairsPosts } from '../services/blogService';
 import LoadingScreen from '../components/LoadingScreen';
 
-const CurrentAffairsPage: React.FC = () => {
+interface CurrentAffairsPageProps {
+  initialData?: any;
+}
+
+const CurrentAffairsPage: React.FC<CurrentAffairsPageProps> = ({ initialData }) => {
   const [currentAffairs, setCurrentAffairs] = useState<BlogPost[]>([]);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -14,10 +18,19 @@ const CurrentAffairsPage: React.FC = () => {
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
+    
+    // Use initial data from SSR if available
+    if (initialData && initialData.upscDates && initialData.tgpscDates && initialData.appscDates) {
+      // We have SSR data, no need to fetch
+      setLoading(false);
+    }
+  }, [initialData]);
 
   useEffect(() => {
     if (!isClient) return;
+
+    // Skip fetching if we already have SSR data
+    if (initialData && initialData.upscDates && initialData.tgpscDates && initialData.appscDates) return;
 
     const fetchCurrentAffairs = async () => {
       try {
@@ -35,7 +48,7 @@ const CurrentAffairsPage: React.FC = () => {
 
     const timer = setTimeout(fetchCurrentAffairs, 100);
     return () => clearTimeout(timer);
-  }, [isClient]);
+  }, [isClient, initialData]);
 
   const formatDate = (timestamp: number | undefined) => {
     if (!timestamp) return 'Date not available';

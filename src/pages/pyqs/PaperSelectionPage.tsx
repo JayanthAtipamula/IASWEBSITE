@@ -21,7 +21,11 @@ interface Paper {
   createdAt: Date;
 }
 
-const PaperSelectionPage: React.FC = () => {
+interface PaperSelectionPageProps {
+  initialData?: any;
+}
+
+const PaperSelectionPage: React.FC<PaperSelectionPageProps> = ({ initialData }) => {
   const { examType = 'upsc' } = useParams<{ examType?: string }>();
   const navigate = useNavigate();
   const [papers, setPapers] = useState<Paper[]>([]);
@@ -31,8 +35,21 @@ const PaperSelectionPage: React.FC = () => {
   const [dateFilter, setDateFilter] = useState<'all' | 'today' | 'week' | 'month' | 'custom'>('all');
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    setIsClient(true);
+    
+    // Use initial data from SSR if available
+    if (initialData && initialData.quizzes) {
+      // Convert quiz data to paper format if needed
+      // For now, we'll still fetch papers as they have different structure
+    }
+  }, [initialData]);
+
+  useEffect(() => {
+    if (!isClient) return;
+
     const fetchPapers = async () => {
       try {
         setLoading(true);
@@ -72,7 +89,7 @@ const PaperSelectionPage: React.FC = () => {
     };
 
     fetchPapers();
-  }, [examType]);
+  }, [examType, isClient]);
 
   // Filter papers based on selected date range
   useEffect(() => {
