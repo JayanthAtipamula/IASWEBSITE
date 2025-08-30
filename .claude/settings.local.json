@@ -6,7 +6,13 @@
       "Bash(npm run dev:*)",
       "WebFetch(domain:lexical.dev)",
       "Bash(npm run build:*)",
-      "WebFetch(domain:github.com)"
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:vite.dev)",
+      "Bash(vercel:*)",
+      "WebFetch(domain:iaswebsite-l79opdof0-princechintu70-yahoocoms-projects.vercel.app)",
+      "WebFetch(domain:iaswebsite-pi.vercel.app)",
+      "WebFetch(domain:vercel.com)",
+      "WebFetch(domain:vite-plugin-ssr.com)"
     ],
     "deny": [],
     "ask": []
