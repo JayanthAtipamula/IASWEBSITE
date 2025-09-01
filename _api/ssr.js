@@ -4,6 +4,13 @@ import { join } from 'path';
 export default async function handler(req, res) {
   const url = req.url;
   
+  // Skip SSR for static assets - let Vercel handle them normally
+  if (url.startsWith('/assets/') || 
+      url.startsWith('/favicon') || 
+      url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    return res.status(404).end();
+  }
+  
   // Full template with all meta tags and SEO optimization
   const fullTemplate = `<!doctype html>
 <html lang="en">

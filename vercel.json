@@ -24,5 +24,6 @@
       "source": "/(.*)",
       "destination": "/api/ssr"
     }
-  ]
+  ],
+  "trailingSlash": false
 } 

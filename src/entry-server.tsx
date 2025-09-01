@@ -92,9 +92,28 @@ export async function render(url: string) {
     }
     
     // Handle current affairs routes
-    else if (url.startsWith('/current-affairs/')) {
-      const pathParts = url.split('/current-affairs/')[1].split('/');
-      const examType = pathParts[0]; // upsc, tgpsc, appsc
+    else if (url.startsWith('/current-affairs')) {
+      if (url === '/current-affairs') {
+        // /current-affairs (main page)
+        console.log('SSR: Processing current affairs main page');
+        
+        try {
+          const upscDates = await getCurrentAffairsDatesServer('upsc');
+          const tgpscDates = await getCurrentAffairsDatesServer('tgpsc');
+          const appscDates = await getCurrentAffairsDatesServer('appsc');
+          
+          initialData = {
+            upscDates,
+            tgpscDates,
+            appscDates,
+            pageType: 'currentAffairsMain'
+          };
+        } catch (error) {
+          console.error('SSR: Error fetching current affairs main data:', error);
+        }
+      } else {
+        const pathParts = url.split('/current-affairs/')[1].split('/');
+        const examType = pathParts[0]; // upsc, tgpsc, appsc
       
       if (pathParts.length === 2) {
         // /current-affairs/upsc/:dateParam
@@ -138,24 +157,7 @@ export async function render(url: string) {
         } catch (error) {
           console.error('SSR: Error fetching current affairs post data:', error);
         }
-      } else {
-        // /current-affairs (main page)
-        console.log('SSR: Processing current affairs main page');
-        
-        try {
-          const upscDates = await getCurrentAffairsDatesServer('upsc');
-          const tgpscDates = await getCurrentAffairsDatesServer('tgpsc');
-          const appscDates = await getCurrentAffairsDatesServer('appsc');
-          
-          initialData = {
-            upscDates,
-            tgpscDates,
-            appscDates,
-            pageType: 'currentAffairsMain'
-          };
-        } catch (error) {
-          console.error('SSR: Error fetching current affairs main data:', error);
-        }
+      }
       }
     }
     

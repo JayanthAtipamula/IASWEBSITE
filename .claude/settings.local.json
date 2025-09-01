@@ -12,7 +12,9 @@
       "WebFetch(domain:iaswebsite-l79opdof0-princechintu70-yahoocoms-projects.vercel.app)",
       "WebFetch(domain:iaswebsite-pi.vercel.app)",
       "WebFetch(domain:vercel.com)",
-      "WebFetch(domain:vite-plugin-ssr.com)"
+      "WebFetch(domain:vite-plugin-ssr.com)",
+      "Bash(node:*)",
+      "Bash(curl:*)"
     ],
     "deny": [],
     "ask": []
