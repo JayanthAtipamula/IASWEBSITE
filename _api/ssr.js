@@ -4,10 +4,21 @@ import { join } from 'path';
 export default async function handler(req, res) {
   const url = req.url;
   
+  console.log('SSR API: Handler called for URL:', url);
+  console.log('SSR API: Request method:', req.method);
+  console.log('SSR API: Full request info:', {
+    url: req.url,
+    originalUrl: req.originalUrl,
+    baseUrl: req.baseUrl,
+    path: req.path,
+    headers: req.headers
+  });
+  
   // Skip SSR for static assets - let Vercel handle them normally
   if (url.startsWith('/assets/') || 
       url.startsWith('/favicon') || 
       url.match(/\.(js|css|png|jpg|jpeg|gif|svg|ico|woff|woff2|ttf|eot)$/)) {
+    console.log('SSR API: Skipping SSR for static asset:', url);
     return res.status(404).end();
   }
   
@@ -86,25 +97,38 @@ export default async function handler(req, res) {
     
     // Use the built server entry point (the correct approach)
     try {
-      // Import the built server render function - this is the key fix!
-      const serverEntry = await import('../dist/server/entry-server.js');
+      // Import the built server render function - use relative path for Vercel
+      console.log('SSR API: Attempting to import entry-server.js');
+      const serverEntry = await import('./entry-server.js');
+      console.log('SSR API: Entry server imported successfully');
+      
       const render = serverEntry.render || serverEntry.default?.render;
+      console.log('SSR API: Render function available:', !!render);
       
       if (render) {
+        console.log('SSR API: Starting render for URL:', url);
         // Use your existing SSR logic that was working
         const rendered = await render(url);
+        console.log('SSR API: Render completed:', !!rendered);
         
         if (rendered && rendered.html) {
           renderedContent = rendered.html;
+          console.log('SSR API: HTML content length:', rendered.html.length);
           
           // Inject initial data for client-side hydration
           if (rendered.initialData) {
             const dataScript = `<script>window.__INITIAL_DATA__ = ${JSON.stringify(rendered.initialData)};</script>`;
             template = template.replace('</head>', `${dataScript}</head>`);
+            console.log('SSR API: Initial data injected');
           }
+        } else {
+          console.log('SSR API: No HTML content in rendered result');
         }
+      } else {
+        console.log('SSR API: No render function found');
       }
     } catch (renderError) {
+      console.error('SSR API: Render error:', renderError);
       // Silent fallback to client-side rendering
       renderedContent = '';
     }

@@ -5,6 +5,12 @@ import { Course } from '../types/course';
 export const getCoursesServer = async (): Promise<Course[]> => {
   try {
     console.log('Server: Fetching courses from Firestore...');
+    
+    if (!adminDb) {
+      console.warn('Server: Firebase admin not available, returning empty courses array');
+      return [];
+    }
+    
     const coursesRef = adminDb.collection('courses');
     const q = coursesRef.orderBy('createdAt', 'desc');
     const snapshot = await q.get();

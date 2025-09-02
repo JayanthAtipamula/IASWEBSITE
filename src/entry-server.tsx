@@ -291,23 +291,62 @@ export async function render(url: string) {
     else if (url === '/') {
       console.log('SSR: Processing homepage');
       
+      let categories = [];
+      let recentPosts = [];
+      let courses = [];
+      
       try {
-        const categories = await getCategoriesServer();
-        const recentPosts = await getPublishedPostsServer();
-        const courses = await getCoursesServer();
-        
-        initialData = {
-          categories,
-          recentPosts: recentPosts.slice(0, 6), // Limit to 6 recent posts
-          courses: courses.slice(0, 6), // Limit to 6 recent courses
-          pageType: 'homepage'
-        };
+        console.log('SSR: Fetching categories for homepage...');
+        categories = await getCategoriesServer();
+        console.log('SSR: Categories fetched successfully:', categories.length);
       } catch (error) {
-        console.error('SSR: Error fetching homepage data:', error);
+        console.error('SSR: Error fetching categories:', error);
+        categories = [];
       }
+      
+      try {
+        console.log('SSR: Fetching posts for homepage...');
+        recentPosts = await getPublishedPostsServer();
+        console.log('SSR: Posts fetched successfully:', recentPosts.length);
+      } catch (error) {
+        console.error('SSR: Error fetching posts:', error);
+        recentPosts = [];
+      }
+      
+      try {
+        console.log('SSR: Fetching courses for homepage...');
+        courses = await getCoursesServer();
+        console.log('SSR: Courses fetched successfully:', courses.length);
+      } catch (error) {
+        console.error('SSR: Error fetching courses:', error);
+        courses = [];
+      }
+      
+      initialData = {
+        categories,
+        recentPosts: recentPosts.slice(0, 6), // Limit to 6 recent posts
+        courses: courses.slice(0, 6), // Limit to 6 recent courses
+        pageType: 'homepage'
+      };
+      
+      console.log('SSR: Homepage initial data prepared with:', {
+        categoriesCount: categories.length,
+        postsCount: recentPosts.length,
+        coursesCount: courses.length
+      });
     }
     
     console.log('SSR: Initial data prepared:', initialData ? Object.keys(initialData) : 'none');
+    
+    // Always render the homepage even with minimal data
+    if (url === '/' && !initialData) {
+      initialData = {
+        categories: [],
+        recentPosts: [],
+        courses: [],
+        pageType: 'homepage'
+      };
+    }
     
     const html = renderToString(
       <StrictMode>

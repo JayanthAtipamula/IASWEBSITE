@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "vite",
     "dev:ssr": "cross-env NODE_ENV=development node server.js",
-    "build": "npm run build:client && npm run build:server && npm run build:cleanup",
+    "build": "npm run build:client && npm run build:server && npm run build:cleanup && npm run build:copy-server",
     "build:client": "vite build --outDir dist/client",
     "build:server": "vite build --ssr src/entry-server.tsx --outDir dist/server",
-    "build:cleanup": "rm -f dist/client/index.html",
-    "build:vercel": "npm run build",
+    "build:cleanup": "rm -f dist/client/index.html && rm -f .vercel/output/static/index.html && rm -f index.html",
+    "build:copy-server": "cp dist/server/entry-server.js _api/",
+    "build:vercel": "npm run build && npm run vercel:cleanup",
+    "vercel:cleanup": "find .vercel/output -name 'index.html' -delete 2>/dev/null || true",
     "start": "cross-env NODE_ENV=production node server.js",
     "lint": "eslint .",
     "preview": "vite preview"

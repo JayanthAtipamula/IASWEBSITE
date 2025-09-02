@@ -6,6 +6,11 @@ export const getBlogPostBySlugServer = async (slug: string): Promise<BlogPost | 
   try {
     console.log('Server: Starting to fetch blog post with slug:', slug);
     
+    if (!adminDb) {
+      console.warn('Server: Firebase admin not available, returning null for slug:', slug);
+      return null;
+    }
+    
     const postsRef = adminDb.collection('posts');
     console.log('Server: Collection reference created');
     
@@ -40,6 +45,11 @@ export const getBlogPostBySlugServer = async (slug: string): Promise<BlogPost | 
 
 export const getCategoriesServer = async (): Promise<Category[]> => {
   try {
+    if (!adminDb) {
+      console.warn('Server: Firebase admin not available, returning empty categories array');
+      return [];
+    }
+    
     const categoriesRef = adminDb.collection('categories');
     const snapshot = await categoriesRef.get();
     return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() } as Category));
@@ -51,6 +61,11 @@ export const getCategoriesServer = async (): Promise<Category[]> => {
 
 export const getPublishedPostsServer = async (): Promise<BlogPost[]> => {
   try {
+    if (!adminDb) {
+      console.warn('Server: Firebase admin not available, returning empty posts array');
+      return [];
+    }
+    
     const postsRef = adminDb.collection('posts');
     const q = postsRef.where('published', '==', true).orderBy('createdAt', 'desc');
     const snapshot = await q.get();
