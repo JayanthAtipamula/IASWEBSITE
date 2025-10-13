@@ -242,7 +242,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
   };
 
   const getPostsByCategory = (categoryId: string) => {
-    return allPosts.filter(p => p.categories.includes(categoryId));
+    return allPosts.filter(p => p.categories.includes(categoryId)).reverse();
   };
 
   const formatDate = (timestamp: number | undefined) => {

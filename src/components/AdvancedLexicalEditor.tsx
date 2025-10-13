@@ -15,9 +15,9 @@ import { LexicalErrorBoundary } from '@lexical/react/LexicalErrorBoundary';
 import { useLexicalComposerContext } from '@lexical/react/LexicalComposerContext';
 import { HeadingNode, QuoteNode } from '@lexical/rich-text';
 import { ListItemNode, ListNode } from '@lexical/list';
-import { LinkNode, AutoLinkNode } from '@lexical/link';
+import { LinkNode, AutoLinkNode, $createLinkNode } from '@lexical/link';
 import { CodeNode, CodeHighlightNode } from '@lexical/code';
-import { TableNode, TableCellNode, TableRowNode } from '@lexical/table';
+import { TableNode, TableCellNode, TableRowNode, $createTableNode, $createTableCellNode, $createTableRowNode } from '@lexical/table';
 
 // Lexical HTML utilities
 import { $generateHtmlFromNodes, $generateNodesFromDOM } from '@lexical/html';
@@ -584,8 +584,129 @@ function ComprehensiveToolbarPlugin({
     }
   };
 
-  // Removed insertLink, insertImage, and insertTable functions per user request
-  // These functions were supporting the removed toolbar buttons
+  // Link functionality - SIMPLIFIED APPROACH
+  const insertLink = () => {
+    const url = prompt('Enter the URL for the link:');
+    if (url && url.trim()) {
+      editor.update(() => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection)) {
+          // Get the selected text
+          const selectedText = selection.getTextContent();
+          
+          // If no text is selected, ask for link text
+          let linkText = selectedText;
+          if (!linkText.trim()) {
+            linkText = prompt('Enter the text to display for the link:', '') || url;
+          }
+          
+          // Create the link node
+          const linkNode = $createLinkNode(url.trim());
+          linkNode.append($createTextNode(linkText.trim()));
+          
+          // Insert the link
+          selection.insertNodes([linkNode]);
+        }
+      });
+    }
+  };
+
+  // Remove link functionality - SIMPLE APPROACH
+  const removeLink = () => {
+    const confirmRemove = confirm('Remove the selected link?');
+    if (confirmRemove) {
+      editor.update(() => {
+        const selection = $getSelection();
+        if ($isRangeSelection(selection)) {
+          // Get the selected text
+          const selectedText = selection.getTextContent();
+          
+          // Remove the selection and insert plain text
+          selection.removeText();
+          selection.insertText(selectedText);
+        }
+      });
+    }
+  };
+
+  // Table functionality - SIMPLIFIED APPROACH
+  const insertTable = () => {
+    const rows = prompt('Number of rows (default 3):', '3');
+    const cols = prompt('Number of columns (default 3):', '3');
+    
+    const numRows = parseInt(rows) || 3;
+    const numCols = parseInt(cols) || 3;
+    
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        // Create table with specified dimensions
+        const tableNode = $createTableNode();
+        const tableRows = [];
+        
+        for (let i = 0; i < numRows; i++) {
+          const cells = [];
+          for (let j = 0; j < numCols; j++) {
+            const cellNode = $createTableCellNode();
+            // Add header styling for first row
+            if (i === 0) {
+              cellNode.setStyle('background-color: #1f2937; color: white; font-weight: 600; padding: 12px 16px; border: 1px solid #1f2937;');
+            } else {
+              cellNode.setStyle('padding: 12px 16px; border: 1px solid #e5e7eb; background-color: white;');
+            }
+            cellNode.append($createParagraphNode());
+            cells.push(cellNode);
+          }
+          const rowNode = $createTableRowNode();
+          rowNode.append(...cells);
+          tableRows.push(rowNode);
+        }
+        
+        tableNode.append(...tableRows);
+        // Add professional table styling
+        tableNode.setStyle('border-collapse: collapse; width: 100%; margin: 1rem 0; border: 1px solid #e5e7eb; border-radius: 8px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);');
+        selection.insertNodes([tableNode]);
+      }
+    });
+  };
+
+  // Table removal functionality
+  const removeTable = () => {
+    editor.update(() => {
+      const selection = $getSelection();
+      if ($isRangeSelection(selection)) {
+        const anchorNode = selection.anchor.getNode();
+        const focusNode = selection.focus.getNode();
+        
+        // Find the table node
+        let tableNode = null;
+        let currentNode = anchorNode;
+        
+        while (currentNode && !tableNode) {
+          if (currentNode.getType() === 'table') {
+            tableNode = currentNode;
+            break;
+          }
+          currentNode = currentNode.getParent();
+        }
+        
+        if (!tableNode) {
+          currentNode = focusNode;
+          while (currentNode && !tableNode) {
+            if (currentNode.getType() === 'table') {
+              tableNode = currentNode;
+              break;
+            }
+            currentNode = currentNode.getParent();
+          }
+        }
+        
+        if (tableNode) {
+          tableNode.remove();
+        }
+      }
+    });
+  };
 
   // Alignment
   const handleAlignment = (alignment: 'left' | 'center' | 'right' | 'justify') => {
@@ -966,10 +1087,50 @@ function ComprehensiveToolbarPlugin({
 
       <div className="w-px h-6 bg-gray-300"></div>
 
-      {/* Insert Menu - Removed Link, Image, and Table buttons per user request */}
-      {/* <div className="flex items-center gap-1">
-        Removed: 🔗 Link, 🖼️ Image, 📊 Table buttons
-      </div> */}
+       {/* Insert Menu */}
+       <div className="flex items-center gap-1">
+         <button
+           type="button"
+           onClick={insertLink}
+           className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
+           title="Insert Link"
+         >
+           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1" />
+           </svg>
+         </button>
+         <button
+           type="button"
+           onClick={removeLink}
+           className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 border border-red-300 rounded-md transition-all duration-200 shadow-sm"
+           title="Remove Link"
+         >
+           <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728L5.636 5.636m12.728 12.728L18.364 5.636M5.636 18.364l12.728-12.728" />
+           </svg>
+         </button>
+        <button
+          type="button"
+          onClick={insertTable}
+          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 border border-gray-300 rounded-md transition-all duration-200 shadow-sm"
+          title="Insert Table"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 10h18M3 14h18m-9-4v8m-7 0V4a1 1 0 011-1h16a1 1 0 011 1v16a1 1 0 01-1 1H4a1 1 0 01-1-1V10z" />
+          </svg>
+        </button>
+        <button
+          type="button"
+          onClick={removeTable}
+          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 border border-red-300 rounded-md transition-all duration-200 shadow-sm"
+          title="Remove Table"
+        >
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg>
+        </button>
+      </div>
+
     </div>
   );
 }

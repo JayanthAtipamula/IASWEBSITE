@@ -144,3 +144,182 @@
   outline: 2px solid #3b82f6;
   outline-offset: 2px;
 }
+
+/* Frontend Content Display Styles */
+.prose {
+  /* Preserve spacing and line breaks */
+  white-space: pre-wrap;
+}
+
+.prose p {
+  margin-bottom: 1rem;
+  line-height: 1.6;
+}
+
+.prose h1, .prose h2, .prose h3, .prose h4, .prose h5, .prose h6 {
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  line-height: 1.3;
+}
+
+.prose h1:first-child, .prose h2:first-child, .prose h3:first-child {
+  margin-top: 0;
+}
+
+/* Professional Table Styles for Frontend Display */
+.prose table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: 2rem 0;
+  background-color: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px 0 rgba(0, 0, 0, 0.06);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.prose table th,
+.prose table td {
+  border: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  text-align: left;
+  vertical-align: middle;
+  font-size: 14px;
+  line-height: 1.5;
+  min-height: 44px;
+}
+
+.prose table th {
+  background-color: #f8fafc;
+  font-weight: 600;
+  color: #374151;
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: 0;
+  border-bottom: 2px solid #d1d5db;
+}
+
+.prose table td {
+  background-color: #ffffff;
+  color: #374151;
+  vertical-align: middle;
+}
+
+.prose table tr:nth-child(even) td {
+  background-color: #f9fafb;
+}
+
+.prose table tr:hover td {
+  background-color: #f3f4f6;
+}
+
+.prose table tr:first-child th {
+  background-color: #1f2937;
+  color: #ffffff;
+  border-color: #1f2937;
+  font-weight: 600;
+}
+
+/* Ensure proper cell height and alignment */
+.prose table td,
+.prose table th {
+  height: auto;
+  min-height: 44px;
+  display: table-cell;
+  vertical-align: middle;
+}
+
+/* Fix text alignment in cells */
+.prose table td p,
+.prose table th p {
+  margin: 0;
+  padding: 0;
+  line-height: 1.5;
+}
+
+.prose table td *,
+.prose table th * {
+  vertical-align: middle;
+}
+
+/* Responsive table */
+@media (max-width: 768px) {
+  .prose table {
+    font-size: 12px;
+    margin: 1rem 0;
+  }
+  
+  .prose table th,
+  .prose table td {
+    padding: 8px 12px;
+    font-size: 12px;
+    min-height: 36px;
+  }
+}
+
+/* Additional table styling for better appearance */
+.prose table caption {
+  caption-side: top;
+  padding: 8px 0;
+  font-weight: 600;
+  color: #374151;
+}
+
+/* Ensure tables don't break layout */
+.prose table tbody {
+  display: table;
+  width: 100%;
+}
+
+.prose table thead {
+  display: table-header-group;
+}
+
+.prose table tfoot {
+  display: table-footer-group;
+}
+
+.prose table tr {
+  display: table-row;
+}
+
+.prose table th,
+.prose table td {
+  display: table-cell;
+  white-space: normal;
+}
+
+/* Link styles */
+.prose a {
+  color: #2563eb;
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 2px;
+}
+
+.prose a:hover {
+  color: #1d4ed8;
+  text-decoration-thickness: 2px;
+}
+
+/* Preserve spacing in content */
+.prose .preserve-spacing {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+}
+
+/* Ensure proper spacing between elements */
+.prose > * + * {
+  margin-top: 1rem;
+}
+
+.prose > h1 + *,
+.prose > h2 + *,
+.prose > h3 + *,
+.prose > h4 + *,
+.prose > h5 + *,
+.prose > h6 + * {
+  margin-top: 0.5rem;
+}
