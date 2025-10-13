@@ -518,7 +518,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
           )}
           
           {/* Floating action button to open mobile sidebar */}
-          {!(isBlogProp || post.isBlog) && (
+          {!(isBlogProp || post.isBlog) && !mobileSidebarOpen && (
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
               className={`lg:hidden fixed top-28 -left-2 bg-red-600 text-white p-3 rounded-r-full shadow-lg hover:bg-red-700 transition-all duration-300 z-50 ${
