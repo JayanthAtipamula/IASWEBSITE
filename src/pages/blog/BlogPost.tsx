@@ -521,7 +521,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
           {!(isBlogProp || post.isBlog) && (
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              className={`lg:hidden fixed top-1/2 left-6 -translate-y-1/2 bg-blue-600 text-white p-3 rounded-full shadow-lg hover:bg-blue-700 transition-all duration-300 z-50 ${
+              className={`lg:hidden fixed top-20 left-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 z-50 ${
                 isScrolling ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
             >
@@ -530,7 +530,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
                   strokeLinecap="round" 
                   strokeLinejoin="round" 
                   strokeWidth={2} 
-                  d={mobileSidebarOpen ? "M15 19l-7-7 7-7" : "M9 5l7 7-7 7"} 
+                  d="M4 6h16M4 12h16M4 18h16"
                 />
               </svg>
             </button>
