@@ -521,7 +521,7 @@ const BlogPost: React.FC<BlogPostProps> = ({ isCurrentAffair: isCurrentAffairPro
           {!(isBlogProp || post.isBlog) && (
             <button
               onClick={() => setMobileSidebarOpen(!mobileSidebarOpen)}
-              className={`lg:hidden fixed top-20 left-6 bg-red-600 text-white p-3 rounded-full shadow-lg hover:bg-red-700 transition-all duration-300 z-50 ${
+              className={`lg:hidden fixed top-28 -left-2 bg-red-600 text-white p-3 rounded-r-full shadow-lg hover:bg-red-700 transition-all duration-300 z-50 ${
                 isScrolling ? 'opacity-0 pointer-events-none' : 'opacity-100'
               }`}
             >
